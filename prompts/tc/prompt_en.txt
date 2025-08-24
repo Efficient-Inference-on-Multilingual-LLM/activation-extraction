@@ -1,0 +1,11 @@
+Classify the topic of the following text. Choose exactly one of the following topics:
+- geography
+- science/technology
+- entertainment
+- politics
+- health
+- travel
+- sports
+
+Text: {text}
+Topic:

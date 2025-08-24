@@ -1,0 +1,3 @@
+Terjemahkan teks berikut dari Bahasa {source_lang} ke Bahasa {target_lang}.
+Teks: {text}
+Teks Terjemahan:

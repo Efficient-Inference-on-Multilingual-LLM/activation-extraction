@@ -1,0 +1,11 @@
+Klasifikasikan topik dari teks berikut. Pilih tepat satu dari topik-topik berikut:
+- geografi
+- sains/teknologi
+- hiburan
+- politik
+- kesehatan
+- perjalanan
+- olahraga
+
+Teks: {text}
+Topik:
