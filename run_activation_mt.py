@@ -20,7 +20,7 @@ def main(args):
 
 	# Load hooked model
 	print(f'Load model: {args.model_name}')
-	saver = ActivationSaver(args.output_dir, task_id='mt', model_name=args.model_name, prompt_id=prompt_id)
+	saver = ActivationSaver(args.output_dir, task_id='machine_translation', model_name=args.model_name, prompt_id=prompt_id)
 	hooked_model = HookedModel(args.model_name, saver=saver)  # Initialize with a hook fn saver
 	tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description="Extract activation for Machine Translation task")
 	parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
-	parser.add_argument("--prompt_path", type=str, default="./prompts/mt/prompt_en.txt", help="Path to the prompt file")
+	parser.add_argument("--prompt_path", type=str, default="./prompts/machine_translation/prompt_en.txt", help="Path to the prompt file")
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--source_langs', type=str, nargs='+', default=['fra_Latn', 'jav_Latn', 'sun_Latn', 'tur_Latn', 'cym_Latn'], help='List of source languages')
 	parser.add_argument("--target_langs", type=str, nargs='+', default=['ind_Latn', 'eng_Latn'], help="List of target languages")

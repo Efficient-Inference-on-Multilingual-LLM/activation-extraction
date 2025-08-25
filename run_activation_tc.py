@@ -20,7 +20,7 @@ def main(args):
 
     # Load hooked model
     print(f'Load model: {args.model_name}')
-    saver = ActivationSaver(args.output_dir, task_id='tc', model_name=args.model_name, prompt_id=prompt_id)
+    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id=prompt_id)
     hooked_model = HookedModel(args.model_name, saver=saver)  # Initialize with a hook fn saver
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
