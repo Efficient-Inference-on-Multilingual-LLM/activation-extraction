@@ -9,7 +9,7 @@ import os
 
 def main(args):
     with open(args.prompt_path) as f:
-        initial_prompt = f.read()
+        initial_prompt = f.read() ## TODO: Adjust the prompt based on the language of the sentence (must be the same)
     # Get the file name and remove the extension
     prompt_id = os.path.basename(args.prompt_path).split('.')[0]
 
