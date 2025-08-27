@@ -18,7 +18,6 @@ prompt_config = 'prompt_en'
 
 # Get all compressed experiment results (activations)
 files_to_upload = glob.glob(os.path.join(parent_directory, task, '*', prompt_config, '*.tar.gz'))
-files_to_upload
 
 # Loop through and upload each file
 for file_path in files_to_upload:

@@ -3,12 +3,9 @@
 # Specifiy cuda device if needed
 export CUDA_VISIBLE_DEVICES=0
 
-# Model and experiment version
-MODEL_NAME="Qwen/Qwen3-4B"
-    
 echo "Running inference at $(date)"
 python run_activation_mt.py \
-    --model_name $MODEL_NAME \
+    --model_name "Qwen/Qwen3-8B" \
     --prompt_path "./prompts/machine_translation/prompt_en.txt" \
     --output_dir "./outputs" \
     --target_langs fra_Latn jav_Latn sun_Latn tur_Latn cym_Latn \

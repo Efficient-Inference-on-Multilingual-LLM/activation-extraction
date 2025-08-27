@@ -3,12 +3,9 @@
 # Specifiy cuda device if needed
 export CUDA_VISIBLE_DEVICES=0
 
-# Model and experiment version
-MODEL_NAME="Qwen/Qwen3-4B"
-    
 echo "Running inference at $(date)"
 python run_activation_tc.py \
-    --model_name $MODEL_NAME \
+    --model_name "Qwen/Qwen3-4B" \
     --prompt_path "./prompts/topic_classification/prompt_en.txt" \
     --output_dir "./outputs" \
     --languages ind_Latn eng_Latn \
