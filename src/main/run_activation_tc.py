@@ -21,7 +21,7 @@ def main(args):
         datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
 
         # Load Prompt Template
-        if args.is_prompted: 
+        if args.is_prompted == "True": 
             with open(f'./prompts/topic_classification/{lang}.txt') as f:
                 prompt_template = f.read()
         
@@ -31,7 +31,7 @@ def main(args):
             hooked_model.set_saver_lang(lang)
 
             # Build Prompt Based on Template
-            if args.is_prompted: 
+            if args.is_prompted == "True": 
                 prompt = prompt_template.replace("{text}", instance['text'])
             else:
                 prompt = instance['text']
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description="Extract activation for topic classification task")
 	parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
-	parser.add_argument("--is_prompted", type=str, default="./prompts/tc/prompt_en.txt", help="Path to the prompt file")
+	parser.add_argument("--is_prompted", type=str, default="True", help="Is Prompted")
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
 	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
