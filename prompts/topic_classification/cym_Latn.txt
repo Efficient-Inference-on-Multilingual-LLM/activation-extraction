@@ -1,0 +1,11 @@
+Dosbarthwch bwnc y testun canlynol. Dewiswch yn union un o'r pynciau canlynol:
+- daearyddiaeth
+- gwyddoniaeth/technoleg
+- adloniant
+- gwleidyddiaeth
+- iechyd
+- teithio
+- chwaraeon
+
+Testun: {text}
+Pwnc:

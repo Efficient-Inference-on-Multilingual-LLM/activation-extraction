@@ -1,0 +1,11 @@
+Ainisha mada ya maandishi yafuatayo. Chagua moja ya mada zifuatazo:
+- Jiografia
+- sayansi/teknolojia
+- burudani
+- siasa
+- afya
+- kusafiri
+- michezo
+
+Maandishi: {text}
+Mada:

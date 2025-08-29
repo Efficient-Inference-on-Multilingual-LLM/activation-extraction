@@ -1,0 +1,11 @@
+Classez le sujet du texte suivant. Choisissez exactement l'un des sujets suivants :
+- géographie
+- science/technologie
+- divertissement
+- politique
+- santé
+- voyages
+- sports
+
+Texte : {text}
+Sujet :

@@ -1,9 +1,9 @@
 import argparse
 from tqdm import tqdm
 from datasets import load_dataset
-from src.const import LANGCODE2LANGNAME
-from src.hooked_model import HookedModel
-from src.activation_saver import ActivationSaver
+from ..utils.const import LANGCODE2LANGNAME
+from ..utils.hooked_model import HookedModel
+from ..utils.activation_saver import ActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 

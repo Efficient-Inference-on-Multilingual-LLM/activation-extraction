@@ -1,0 +1,11 @@
+Klasifikasi topik teks ing ngisor iki. Pilih salah siji saka topik ing ngisor iki:
+- geografi
+- ilmu / teknologi
+- hiburan
+- politik
+- kesehatan
+- lelungan
+- olahraga
+
+Teks: {text}
+Topik:

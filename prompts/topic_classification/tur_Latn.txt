@@ -1,0 +1,11 @@
+Aşağıdaki metnin konusunu sınıflandırın. Aşağıdaki konulardan tam olarak birini seçin:
+- coğrafya
+- bilim/teknoloji
+- eğlence
+- politika
+- sağlık
+- seyahat
+- spor
+
+Metin: {text}
+Konu:

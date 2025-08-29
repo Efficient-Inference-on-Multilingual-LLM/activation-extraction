@@ -1,0 +1,11 @@
+Uriin ang paksa ng sumusunod na teksto. Piliin ang eksaktong isa sa mga sumusunod na paksa:
+- heograpiya
+- agham/teknolohiya
+- libangan
+- pulitika
+- kalusugan
+- paglalakbay
+- palakasan
+
+Teksto: {text}
+Paksa:

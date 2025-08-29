@@ -1,0 +1,11 @@
+Klasifikasi topik téks di handap. Pilih persis salah sahiji topik di handap ieu:
+- géografi
+- elmu pangaweruh / téhnologi
+- hiburan
+- pulitik
+- kaséhatan
+- lalampahan
+- olahraga
+
+Téks: {text}
+Topik:

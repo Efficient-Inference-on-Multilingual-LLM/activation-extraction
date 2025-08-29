@@ -1,40 +1,42 @@
 import argparse
 from tqdm import tqdm
 from datasets import load_dataset
-from src.const import LANGCODE2LANGNAME
-from src.hooked_model import HookedModel
-from src.activation_saver import ActivationSaver
+from ..utils.const import LANGCODE2LANGNAME
+from ..utils.hooked_model import HookedModel
+from ..utils.activation_saver import ActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 
 def main(args):
-    with open(args.prompt_path) as f:
-        initial_prompt = f.read() ## TODO: Adjust the prompt based on the language of the sentence (must be the same)
-    # Get the file name and remove the extension
-    prompt_id = os.path.basename(args.prompt_path).split('.')[0]
-
-    # Load datasets
-    datasets_per_lang = {}
-    for lang in args.languages:
-        datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
-
-    # Load hooked model
+    # Load Model
     print(f'Load model: {args.model_name}')
-    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id=prompt_id)
-    hooked_model = HookedModel(args.model_name, saver=saver)  # Initialize with a hook fn saver
+    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id= "prompted" if args.is_prompted == "True" else "raw")
+    hooked_model = HookedModel(args.model_name, saver=saver)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
+    # Feed Forward
     for lang in args.languages:
-        for instance in tqdm(datasets_per_lang[lang], desc=f"Processing activation for topic classification task ({lang})"):
+        # Load Dataset
+        datasets_per_lang = {}
+        datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
 
-            # Setup activation save location
+        # Load Prompt Template
+        if args.is_prompted: 
+            with open(f'./prompts/topic_classification/{lang}.txt') as f:
+                prompt_template = f.read()
+        
+        # Iterate Through Each Instance
+        for instance in tqdm(datasets_per_lang[lang], desc=f"Processing activation for topic classification task ({lang})"):
             hooked_model.set_saver_id(str(instance['index_id']))
             hooked_model.set_saver_lang(lang)
 
-            # Setup prompt
-            prompt = initial_prompt.replace("{text}", instance['text'])
+            # Build Prompt Based on Template
+            if args.is_prompted: 
+                prompt = prompt_template.replace("{text}", instance['text'])
+            else:
+                prompt = instance['text']
 
-            # Add template for instruct models
+            # Inference
             if args.is_base_model or 'bloom' in args.model_name:
                 text = prompt
             else:
@@ -43,13 +45,10 @@ def main(args):
                     messages,
                     tokenize=False,
                     add_generation_prompt=True,
-                    enable_thinking=False # Turn off thinking for Qwen3 models
+                    enable_thinking=False 
                 )
             
-            # Tokenize inputs
             inputs = tokenizer([text], return_tensors="pt").to(hooked_model.model.device)
-
-            # Run forward prop
             _ = hooked_model.generate(inputs)
 
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description="Extract activation for topic classification task")
 	parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
-	parser.add_argument("--prompt_path", type=str, default="./prompts/tc/prompt_en.txt", help="Path to the prompt file")
+	parser.add_argument("--is_prompted", type=str, default="./prompts/tc/prompt_en.txt", help="Path to the prompt file")
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
 	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
