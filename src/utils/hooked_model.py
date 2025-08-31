@@ -16,10 +16,13 @@ class HookedModel:
                 layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
         else:
             self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
-            self.model.model.rotary_emb.register_forward_hook(lambda module, input, output, layer_id="rotary_emb": self.saver.hook_fn(module, input, output, layer_id))
             self.model.model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
             for i, layer in enumerate(self.model.model.layers):
                 layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
+            
+            # TODO: Figure out how to extract components of the model that have been applied with RoPE
+            # self.model.model.rotary_emb.register_forward_hook(lambda module, input, output, layer_id="rotary_emb": self.saver.hook_fn(module, input, output, layer_id))
+        
 
     def set_saver_id(self, new_id: int):
         self.saver.set_id(new_id)
@@ -34,3 +37,16 @@ class HookedModel:
                 max_new_tokens=1,
             )
         return outputs
+
+    # Clear hooks for debugging purposes
+    def clear_hooks(self):
+        if 'bloom' in self.model_name:
+            for i, layer in enumerate(self.model.transformer.h):
+                layer._forward_hooks.clear()
+        else:
+            self.model.model.embed_tokens._forward_hooks.clear()
+            self.model.model.norm._forward_hooks.clear()
+            for i, layer in enumerate(self.model.model.layers):
+                layer._forward_hooks.clear()
+
+            # self.model.model.rotary_emb._forward_hooks.clear()
