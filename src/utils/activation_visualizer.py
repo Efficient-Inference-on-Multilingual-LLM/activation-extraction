@@ -7,10 +7,9 @@ from sklearn.manifold import TSNE
 from matplotlib.lines import Line2D
 
 class ActivationVisualizer:
-    def __init__(self, models: List[Dict], languages: List[str], base_path: str):
+    def __init__(self, models: List[Dict], languages: List[str]):
         self.models = models
         self.languages = languages
-        self.base_path = base_path
         self.color_map = self._create_color_map()
 
     def _create_color_map(self) -> Dict[str, Tuple]:
@@ -20,23 +19,29 @@ class ActivationVisualizer:
     def generate_plots_classification(
             self,
             save_path: str = "activation_plots",
-            ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf"
+            ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf",
+            activation_path: str = None,
         ):
         for model_id in range (len(self.models)):
             fig, axes = plt.subplots(self.models[model_id]['row'], self.models[model_id]['col'], figsize=self.models[model_id]['figsize'])
             axes = axes.flatten()
 
-            for layer in range (self.models[model_id]['num_layers']):
+            for layer in tqdm(range(self.models[model_id]['num_layers']), desc = f"Processing Model {self.models[model_id]['name']} Layers"):
                 label_language = []
                 latent = []
                 
                 for current_language in self.languages:
-                    for text_id in os.listdir(self.base_path):
-                        text_path = os.path.join(self.base_path, text_id)
+                    base_path = os.path.join(activation_path, current_language)
+                    for text_id in os.listdir(base_path):
+                        text_path = os.path.join(base_path, text_id)
                         if not os.path.isdir(text_path):
                             continue
-                        path = os.path.join(text_path, f"{layer}.pt")
-                        activation_values = torch.load(path)
+                        path = os.path.join(text_path, f"layer_{layer}.pt")
+                        try:
+                            activation_values = torch.load(path)
+                        except EOFError:
+                            print(f"Error loading {path}, skipping...")
+                            continue
                         latent.append(activation_values.to(torch.float32).numpy())
                         label_language.append(current_language)
 
