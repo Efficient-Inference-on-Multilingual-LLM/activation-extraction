@@ -25,17 +25,7 @@ class ActivationSaver:
             print(f"Warning: Language not set for layer {layer_id}")
             return
 
-        if any(list(map(lambda x: x in self.model_name.lower(), ['qwen']))):
-            path = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
-            os.makedirs(path, exist_ok=True)
-            save_path = os.path.join(path, f"layer_{layer_id}.pt")
-            torch.save(output[0, -1, :].detach().cpu(), save_path) 
-
-            path = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "average")
-            os.makedirs(path, exist_ok=True)
-            save_path = os.path.join(path, f"layer_{layer_id}.pt")
-            torch.save(output[0].mean(dim=0).detach().cpu(), save_path) 
-        else:
+        if any(list(map(lambda x: x in self.model_name.lower(), ['gemma']))) and layer_id not in ['embed_tokens', 'norm']:
             path = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
             os.makedirs(path, exist_ok=True)
             save_path = os.path.join(path, f"layer_{layer_id}.pt")
@@ -45,3 +35,15 @@ class ActivationSaver:
             os.makedirs(path, exist_ok=True)
             save_path = os.path.join(path, f"layer_{layer_id}.pt")
             torch.save(output[0][0].mean(dim=0).detach().cpu(), save_path) 
+
+        # Extraction for any other layers/models
+        else:
+            path = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
+            os.makedirs(path, exist_ok=True)
+            save_path = os.path.join(path, f"layer_{layer_id}.pt")
+            torch.save(output[0, -1, :].detach().cpu(), save_path) 
+
+            path = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "average")
+            os.makedirs(path, exist_ok=True)
+            save_path = os.path.join(path, f"layer_{layer_id}.pt")
+            torch.save(output[0].mean(dim=0).detach().cpu(), save_path) 

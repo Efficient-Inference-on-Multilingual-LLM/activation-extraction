@@ -10,14 +10,15 @@ load_dotenv()
 login(token=os.getenv("HF_TOKEN"))
 api = HfApi()
 
-# Define your repository details, the outputs parent directory, task, and prompt configuration
+# Define your repository details, the outputs parent directory, task, models, and prompt configuration (* if all)
 repo_id = "indolinguafrancaresearch/extracted-activations"  
-parent_directory = "outputs"     
-task = 'machine_translation'
-prompt_config = 'prompt_en'
+parent_directory = "outputs"
+task = 'topic_classification'
+models = '*'
+prompt_config = 'prompted'
 
 # Get all compressed experiment results (activations)
-files_to_upload = glob.glob(os.path.join(parent_directory, task, '*', prompt_config, '*.tar.gz'))
+files_to_upload = glob.glob(os.path.join(parent_directory, task, models, prompt_config, '*.tar.gz'))
 
 # Loop through and upload each file
 for file_path in files_to_upload:
