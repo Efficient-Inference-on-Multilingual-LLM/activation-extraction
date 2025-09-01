@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from sklearn.manifold import TSNE
 from matplotlib.lines import Line2D
+from sklearn.metrics import silhouette_score
 
 class ActivationVisualizer:
     def __init__(self, models: List[Dict], languages: List[str]):
@@ -46,6 +47,9 @@ class ActivationVisualizer:
                         label_language.append(current_language)
 
                 latent = np.array(latent)
+
+                score = silhouette_score(latent, label_language)
+
                 tsne = TSNE(n_components=2, random_state=42)
                 latent_2d = tsne.fit_transform(latent)
 
@@ -54,7 +58,7 @@ class ActivationVisualizer:
                     indices = [i for i, lang in enumerate(label_language) if lang == language]
                     ax.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=language, color=self.color_map[language], alpha=0.6, s=10)
                 
-                ax.set_title(f"Layer {layer}")
+                ax.set_title(f"Layer {layer} \nSilhouette Score: {score:.2f}")
             
             legend = [Line2D([0], [0], marker='o', color='w', label=lang, markerfacecolor=self.color_map[lang], markersize=8, alpha=0.6) for lang in self.languages]
             plt.tight_layout(rect=[0, 0, 0.9, 1])
