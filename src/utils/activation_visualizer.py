@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Literal
+from typing import List, Dict, Tuple, Literal, Any
 import matplotlib.pyplot as plt
 import os
 import torch
@@ -6,12 +6,19 @@ import numpy as np
 from sklearn.manifold import TSNE
 from matplotlib.lines import Line2D
 from sklearn.metrics import silhouette_score
+from tqdm import tqdm
 
 class ActivationVisualizer:
-    def __init__(self, models: List[Dict], languages: List[str]):
+    def __init__(
+            self, 
+            models: List[Dict], 
+            languages: List[str],
+            data: Any = None,
+        ):
         self.models = models
         self.languages = languages
         self.color_map = self._create_color_map()
+        self.data = data
 
     def _create_color_map(self) -> Dict[str, Tuple]:
         cmap = plt.get_cmap('tab10')
@@ -21,35 +28,45 @@ class ActivationVisualizer:
             self,
             save_path: str = "activation_plots",
             ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf",
-            activation_path: str = None,
+            activation_path: str = "./activations/extracted",
+            input_mode: Literal["raw", "prompted"] = "raw",
+            extraction_mode: Literal["last_token", "average", "first_token"] = "average",
+            plot_by: Literal["topic", "language"] = "language",
         ):
         for model_id in range (len(self.models)):
             fig, axes = plt.subplots(self.models[model_id]['row'], self.models[model_id]['col'], figsize=self.models[model_id]['figsize'])
             axes = axes.flatten()
 
-            for layer in tqdm(range(self.models[model_id]['num_layers']), desc = f"Processing Model {self.models[model_id]['name']} Layers"):
+            for layer in tqdm(range(-1, self.models[model_id]['num_layers']), desc = f"Processing Model {self.models[model_id]['name']} Layers"):
                 label_language = []
                 latent = []
                 
                 for current_language in self.languages:
-                    base_path = os.path.join(activation_path, current_language)
+                    if activation_path is None:
+                        raise ValueError("activation_path must be provided")
+                    base_path = os.path.join(activation_path, self.models[model_id]['name'], input_mode, current_language, "outputs/topic_classification", self.models[model_id]['name'], input_mode, current_language)
                     for text_id in os.listdir(base_path):
                         text_path = os.path.join(base_path, text_id)
                         if not os.path.isdir(text_path):
                             continue
-                        path = os.path.join(text_path, f"layer_{layer}.pt")
+                        path = os.path.join(text_path, extraction_mode, f"layer_{"embed_tokens" if layer == -1 else layer}.pt")
                         try:
                             activation_values = torch.load(path)
                         except EOFError:
                             print(f"Error loading {path}, skipping...")
                             continue
                         latent.append(activation_values.to(torch.float32).numpy())
-                        label_language.append(current_language)
+                        if plot_by == "topic":
+                            current_data = self.data[current_language]
+                            matching_row = current_data[current_data['text_id'].astype(str) == text_id]
+                            if matching_row.empty:
+                                raise ValueError(f"Warning: No matching data found for text_id {text_id} in language {current_language}")
+                            label_language.append(matching_row['category'].values[0])
+                        elif plot_by == "language":
+                            label_language.append(current_language)
 
                 latent = np.array(latent)
-
                 score = silhouette_score(latent, label_language)
-
                 tsne = TSNE(n_components=2, random_state=42)
                 latent_2d = tsne.fit_transform(latent)
 
@@ -66,7 +83,8 @@ class ActivationVisualizer:
             os.makedirs("results", exist_ok=True)
             plt.savefig(f"results/{save_path}.{ext}", bbox_inches='tight')
             plt.show()
-    
+
+    # TODO: Machine Translation plotting    
     def generate_plots_machine_translation(
             self, 
         ):
