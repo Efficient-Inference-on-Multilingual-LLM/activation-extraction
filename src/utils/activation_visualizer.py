@@ -17,12 +17,16 @@ class ActivationVisualizer:
         ):
         self.models = models
         self.languages = languages
-        self.color_map = self._create_color_map()
+        assert data is not None, "Data must be provided"
         self.data = data
+        self.topics = self.data[self.languages[0]]['category'].unique().tolist() if self.data is not None else []
 
-    def _create_color_map(self) -> Dict[str, Tuple]:
+    def _create_color_map(self, plot_by: Literal["topic", "language"]) -> Dict[str, Tuple]:
         cmap = plt.get_cmap('tab10')
-        return {language: cmap(i) for i, language in enumerate(self.languages)}
+        if plot_by == "topic":  
+            return {topic: cmap(i) for i, topic in enumerate(self.topics)}
+        elif plot_by == "language":
+            return {language: cmap(i) for i, language in enumerate(self.languages)}
 
     def generate_plots_classification(
             self,
@@ -33,6 +37,7 @@ class ActivationVisualizer:
             extraction_mode: Literal["last_token", "average", "first_token"] = "average",
             plot_by: Literal["topic", "language"] = "language",
         ):
+        self.color_map = self._create_color_map(plot_by=plot_by)
         for model_id in range (len(self.models)):
             fig, axes = plt.subplots(self.models[model_id]['row'], self.models[model_id]['col'], figsize=self.models[model_id]['figsize'])
             axes = axes.flatten()
@@ -58,7 +63,7 @@ class ActivationVisualizer:
                         latent.append(activation_values.to(torch.float32).numpy())
                         if plot_by == "topic":
                             current_data = self.data[current_language]
-                            matching_row = current_data[current_data['text_id'].astype(str) == text_id]
+                            matching_row = current_data[current_data['index_id'].astype(str) == text_id]
                             if matching_row.empty:
                                 raise ValueError(f"Warning: No matching data found for text_id {text_id} in language {current_language}")
                             label_language.append(matching_row['category'].values[0])
@@ -70,16 +75,27 @@ class ActivationVisualizer:
                 tsne = TSNE(n_components=2, random_state=42)
                 latent_2d = tsne.fit_transform(latent)
 
-                ax = axes[layer]
-                for language in self.languages:
-                    indices = [i for i, lang in enumerate(label_language) if lang == language]
-                    ax.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=language, color=self.color_map[language], alpha=0.6, s=10)
+                ax = axes[layer+1]
+                if plot_by == "topic":
+                    for topic in self.topics:
+                        indices = [i for i, lang in enumerate(label_language) if lang == topic]
+                        ax.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=topic, color=self.color_map[topic], alpha=0.6, s=10)
+                elif plot_by == "language":
+                    for language in self.languages:
+                        indices = [i for i, lang in enumerate(label_language) if lang == language]
+                        ax.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=language, color=self.color_map[language], alpha=0.6, s=10)
                 
-                ax.set_title(f"Layer {layer} \nSilhouette Score: {score:.2f}")
+                ax.set_title(f"Layer {'embed_tokens' if layer == -1 else layer} \nSilhouette Score: {score:.2f}")
             
-            legend = [Line2D([0], [0], marker='o', color='w', label=lang, markerfacecolor=self.color_map[lang], markersize=8, alpha=0.6) for lang in self.languages]
-            plt.tight_layout(rect=[0, 0, 0.9, 1])
-            fig.legend(handles=legend, loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=len(self.languages), title="Languages")
+            if plot_by == "topic":
+                legend = [Line2D([0], [0], marker='o', color='w', label=topic, markerfacecolor=self.color_map[topic], markersize=8, alpha=0.6) for topic in self.topics]
+            elif plot_by == "language":
+                legend = [Line2D([0], [0], marker='o', color='w', label=lang, markerfacecolor=self.color_map[lang], markersize=8, alpha=0.6) for lang in self.languages]
+
+            plt.tight_layout(rect=[0, 0, 1, 0.9])
+            plt.subplots_adjust(wspace=0.3, hspace=0.3)
+            ncol = len(self.topics) if plot_by == "topic" else len(self.languages)
+            fig.legend(handles=legend, loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=ncol, title="Languages" if plot_by == "language" else "Topics")
             os.makedirs("results", exist_ok=True)
             plt.savefig(f"results/{save_path}.{ext}", bbox_inches='tight')
             plt.show()
