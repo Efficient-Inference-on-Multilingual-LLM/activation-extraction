@@ -19,7 +19,7 @@ for model_name in "${model_names[@]}"; do
     echo "Running inference for model: $model_name at $(date)"
     python3 -m src.main.run_activation_tc \
         --model_name "$model_name" \
-        --is_prompted "False" \
+        --prompt_lang "all" \
         --output_dir "./outputs" \
         --languages arb_Arab cym_Latn eng_Latn fra_Latn ind_Latn jav_Latn jpn_Jpan kor_Hang sun_Latn swh_Latn tgl_Latn tur_Latn urd_Arab \
         # --is_base_model

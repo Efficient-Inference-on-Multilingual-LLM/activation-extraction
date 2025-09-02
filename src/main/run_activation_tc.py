@@ -10,7 +10,15 @@ import os
 def main(args):
     # Load Model
     print(f'Load model: {args.model_name}')
-    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id= "prompted" if args.is_prompted == "True" else "raw")
+    
+    if args.prompt_lang == 'all':
+        prompt_id_saver = 'prompted'
+    elif args.prompt_lang == 'no_prompt':
+        prompt_id_saver = 'raw'
+    else:
+        prompt_id_saver = f'prompt_{args.prompt_lang}' 
+
+    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id=prompt_id_saver)
     hooked_model = HookedModel(args.model_name, saver=saver)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
@@ -21,8 +29,11 @@ def main(args):
         datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
 
         # Load Prompt Template
-        if args.is_prompted == "True": 
+        if args.prompt_lang == "all": 
             with open(f'./prompts/topic_classification/{lang}.txt') as f:
+                prompt_template = f.read()
+        else:
+            with open(f'./prompts/topic_classification/{args.prompt_lang}.txt') as f:
                 prompt_template = f.read()
         
         # Iterate Through Each Instance
@@ -31,7 +42,7 @@ def main(args):
             hooked_model.set_saver_lang(lang)
 
             # Build Prompt Based on Template
-            if args.is_prompted == "True": 
+            if args.prompt_lang == "True": 
                 prompt = prompt_template.replace("{text}", instance['text'])
             else:
                 prompt = instance['text']
@@ -63,7 +74,7 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description="Extract activation for topic classification task")
 	parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
-	parser.add_argument("--is_prompted", type=str, default="True", help="Is Prompted")
+	parser.add_argument("--prompt_lang", type=str, default='all', help="Prompt language. Use 'all' to use prompt that has the same language as the input sentence, use 'no_prompt' to not use any prompt at all.")
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
 	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
