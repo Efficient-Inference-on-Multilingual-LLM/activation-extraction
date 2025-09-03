@@ -41,10 +41,18 @@ def main(args):
 				if args.is_base_model or 'bloom' in args.model_name:
 					text = prompt
 				else:
-					messages = [
-						{'role': 'system', 'content': ''},
-						{'role': 'user', 'content': prompt}
-					]
+					
+					# Gemma2 does not support system message
+					if 'google/gemma-2' in args.model_name.lower():
+						messages = [
+							{'role': 'user', 'content': prompt}
+						]
+					else:
+						messages = [
+							{'role': 'system', 'content': ''},
+							{'role': 'user', 'content': prompt}
+						]
+
 					if 'meta-llama' in args.model_name.lower():
 						user_prompt = messages[-1]['content']
 						text = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{user_prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
