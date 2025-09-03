@@ -42,10 +42,7 @@ def main(args):
             hooked_model.set_saver_lang(lang)
 
             # Build Prompt Based on Template
-            if args.prompt_lang == "True": 
-                prompt = prompt_template.replace("{text}", instance['text'])
-            else:
-                prompt = instance['text']
+            prompt = prompt_template.replace("{text}", instance['text'])
 
             # Inference
             if args.is_base_model or 'bloom' in args.model_name:
