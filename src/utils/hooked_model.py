@@ -6,6 +6,7 @@ class HookedModel:
     def __init__(self, model_name: str, saver: ActivationSaver):
 
         device = "cpu"
+        model_dtype = torch.float16
         if torch.cuda.is_available():
             device = "cuda"
             compute_capability = torch.cuda.get_device_capability()[0]
@@ -13,8 +14,6 @@ class HookedModel:
             # Use bfloat16 if supported
             if compute_capability >= 8:
                 model_dtype = torch.bfloat16
-            else:
-                model_dtype = torch.float16
         
         self.model_name = model_name
         self.saver = saver
