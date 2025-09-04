@@ -22,8 +22,8 @@ for model_name in "${model_names[@]}"; do
         --prompt_lang "all" \
         --output_dir "./outputs" \
         --languages arb_Arab cym_Latn eng_Latn fra_Latn ind_Latn jav_Latn jpn_Jpan kor_Hang sun_Latn swh_Latn tgl_Latn tur_Latn urd_Arab \
+        # --sample_size 100 \
         # --is_base_model
-        # --languages arb_Arab cym_Latn eng_Latn \
     echo "--------------------------------------------------------"
 done
 

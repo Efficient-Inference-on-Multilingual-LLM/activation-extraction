@@ -17,6 +17,8 @@ def main(args):
 	datasets_per_lang = {}
 	for source_langs in args.source_langs:
 		datasets_per_lang[source_langs] = load_dataset("openlanguagedata/flores_plus", source_langs, split="devtest")
+		if args.sample_size:
+            datasets_per_lang[source_langs] = datasets_per_lang[lang].shuffle(seed=42).select(range(args.sample_size))
 
 	# Load hooked model
 	print(f'Load model: {args.model_name}')
@@ -79,6 +81,7 @@ if __name__ == "__main__":
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--source_langs', type=str, nargs='+', default=['fra_Latn', 'jav_Latn', 'sun_Latn', 'tur_Latn', 'cym_Latn'], help='List of source languages')
 	parser.add_argument("--target_langs", type=str, nargs='+', default=['ind_Latn', 'eng_Latn'], help="List of target languages")
+	parser.add_argument("--sample_size", type=int, default=None, help="Number of samples to use from each language. Use None to use all samples.")
 	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
 
 	args = parser.parse_args()

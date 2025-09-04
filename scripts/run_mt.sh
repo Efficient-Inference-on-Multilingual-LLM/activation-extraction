@@ -10,6 +10,7 @@ python run_activation_mt.py \
     --output_dir "./outputs" \
     --target_langs fra_Latn jav_Latn sun_Latn tur_Latn cym_Latn \
     --source_langs ind_Latn eng_Latn \
+    # --sample_size 100 \
     # --source_langs fra_Latn jav_Latn sun_Latn tur_Latn cym_Latn \
     # --target_langs ind_Latn eng_Latn \
     # --is_base_model

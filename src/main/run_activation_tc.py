@@ -27,6 +27,8 @@ def main(args):
         # Load Dataset
         datasets_per_lang = {}
         datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
+        if args.sample_size:
+            datasets_per_lang[lang] = datasets_per_lang[lang].shuffle(seed=42).select(range(args.sample_size))
 
         # Load Prompt Template
         if args.prompt_lang == "all": 
@@ -82,6 +84,7 @@ if __name__ == "__main__":
 	parser.add_argument("--prompt_lang", type=str, default='all', help="Prompt language. Use 'all' to use prompt that has the same language as the input sentence, use 'no_prompt' to not use any prompt at all.")
 	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
 	parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
+	parser.add_argument("--sample_size", type=int, default=None, help="Number of samples to use from each language. Use None to use all samples.")
 	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
 
 	args = parser.parse_args()
