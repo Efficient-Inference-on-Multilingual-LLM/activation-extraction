@@ -22,7 +22,7 @@ class ActivationVisualizer:
         self.topics = self.data[self.languages[0]]['category'].unique().tolist() if self.data is not None else []
 
     def _create_color_map(self, plot_by: Literal["topic", "language"]) -> Dict[str, Tuple]:
-        cmap = plt.get_cmap('tab10')
+        cmap = plt.get_cmap('tab20')
         if plot_by == "topic":  
             return {topic: cmap(i) for i, topic in enumerate(self.topics)}
         elif plot_by == "language":
@@ -30,7 +30,7 @@ class ActivationVisualizer:
 
     def generate_plots_classification(
             self,
-            save_path: str = "activation_plots",
+            save_path: str = "results",
             ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf",
             activation_path: str = "./activations/extracted",
             input_mode: Literal["raw", "prompted"] = "raw",
@@ -39,7 +39,7 @@ class ActivationVisualizer:
         ):
         self.color_map = self._create_color_map(plot_by=plot_by)
         for model_id in range (len(self.models)):
-            fig, axes = plt.subplots(self.models[model_id]['row'], self.models[model_id]['col'], figsize=self.models[model_id]['figsize'])
+            fig, axes = plt.subplots(int(np.ceil((self.models[model_id]['num_layers']+1)/8)), 8, figsize=(32, int((self.models[model_id]['num_layers']+1)/2)))
             axes = axes.flatten()
 
             for layer in tqdm(range(-1, self.models[model_id]['num_layers']), desc = f"Processing Model {self.models[model_id]['name']} Layers"):
@@ -49,12 +49,15 @@ class ActivationVisualizer:
                 for current_language in self.languages:
                     if activation_path is None:
                         raise ValueError("activation_path must be provided")
-                    base_path = os.path.join(activation_path, self.models[model_id]['name'], input_mode, current_language, "outputs/topic_classification", self.models[model_id]['name'], input_mode, current_language)
+                    base_path = os.path.join(activation_path, self.models[model_id]['name'], input_mode, current_language, current_language)
                     for text_id in os.listdir(base_path):
                         text_path = os.path.join(base_path, text_id)
                         if not os.path.isdir(text_path):
                             continue
                         path = os.path.join(text_path, extraction_mode, f"layer_{"embed_tokens" if layer == -1 else layer}.pt")
+                        if not os.path.exists(path):
+                            print(f"Warning: File {path} does not exist, skipping...")
+                            continue
                         try:
                             activation_values = torch.load(path)
                         except EOFError:
@@ -96,9 +99,19 @@ class ActivationVisualizer:
             plt.subplots_adjust(wspace=0.3, hspace=0.3)
             ncol = len(self.topics) if plot_by == "topic" else len(self.languages)
             fig.legend(handles=legend, loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=ncol, title="Languages" if plot_by == "language" else "Topics")
-            os.makedirs("results", exist_ok=True)
-            plt.savefig(f"results/{save_path}.{ext}", bbox_inches='tight')
+            os.makedirs(f"{save_path}", exist_ok=True)
+            plt.savefig(f"{save_path}/{self.models[model_id]['name']}_{plot_by}_{input_mode}_{extraction_mode}.{ext}", bbox_inches='tight')
             plt.show()
+
+    def generate_silhoutte_score(self):
+        num_models = len(self.models)
+        fig, axes = plt.subplots(1, num_models, figsize=(10 * num_models, 6))
+
+        language_scores = []
+        topic_scores = []
+        text_id_scores = []
+
+        # for layer in range (-1, )
 
     # TODO: Machine Translation plotting    
     def generate_plots_machine_translation(
