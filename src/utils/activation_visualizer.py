@@ -7,6 +7,7 @@ from sklearn.manifold import TSNE
 from matplotlib.lines import Line2D
 from sklearn.metrics import silhouette_score
 from tqdm import tqdm
+import traceback
 
 class ActivationVisualizer:
     def __init__(
@@ -14,12 +15,14 @@ class ActivationVisualizer:
             models: List[Dict], 
             languages: List[str],
             data: Any = None,
+            color_map: Any = None
         ):
         self.models = models
         self.languages = languages
         assert data is not None, "Data must be provided"
         self.data = data
         self.topics = self.data[self.languages[0]]['category'].unique().tolist() if self.data is not None else []
+        self.color_map = color_map
 
     def _create_color_map(self, plot_by: Literal["topic", "language"]) -> Dict[str, Tuple]:
         cmap = plt.get_cmap('tab20')
@@ -33,11 +36,12 @@ class ActivationVisualizer:
             save_path: str = "results",
             ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf",
             activation_path: str = "./activations/extracted",
-            input_mode: Literal["raw", "prompted"] = "raw",
+            input_mode: Literal["raw", "prompted", "prompt_eng_Latn", "prompt_ind_Latn"] = "raw",
             extraction_mode: Literal["last_token", "average", "first_token"] = "average",
             plot_by: Literal["topic", "language"] = "language",
         ):
-        self.color_map = self._create_color_map(plot_by=plot_by)
+        if self.color_map is None:
+            self.color_map = self._create_color_map(plot_by=plot_by)
         for model_id in range (len(self.models)):
             fig, axes = plt.subplots(int(np.ceil((self.models[model_id]['num_layers']+1)/8)), 8, figsize=(32, int((self.models[model_id]['num_layers']+1)/2)))
             axes = axes.flatten()
@@ -76,7 +80,12 @@ class ActivationVisualizer:
                 latent = np.array(latent)
                 score = silhouette_score(latent, label_language)
                 tsne = TSNE(n_components=2, random_state=42)
-                latent_2d = tsne.fit_transform(latent)
+                try:
+                    latent_2d = tsne.fit_transform(latent)
+                except Exception as e:
+                    print(f"Error: {e}")
+                    traceback.print_exc()
+                    continue
 
                 ax = axes[layer+1]
                 if plot_by == "topic":
@@ -103,7 +112,7 @@ class ActivationVisualizer:
             plt.savefig(f"{save_path}/{self.models[model_id]['name']}_{plot_by}_{input_mode}_{extraction_mode}.{ext}", bbox_inches='tight')
             plt.show()
 
-    def generate_silhoutte_score(
+    def generate_silhouette_score(
             self, 
             save_path: str = "results",
             ext: Literal["png", "jpg", "jpeg", "pdf"] = "pdf",
