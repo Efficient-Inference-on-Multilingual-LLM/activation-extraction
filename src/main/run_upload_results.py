@@ -11,11 +11,11 @@ login(token=os.getenv("HF_TOKEN"))
 api = HfApi()
 
 # Define your repository details, the outputs parent directory, task, models, and prompt configuration (* if all)
-repo_id = "indolinguafrancaresearch/extracted-activations"  
+repo_id = "indolinguafrancaresearch/extracted-activations"
 parent_directory = "outputs"
 task = 'topic_classification'
 models = '*'
-prompt_config = 'prompted'
+prompt_config = 'prompt_eng_Latn'
 
 # Get all compressed experiment results (activations)
 files_to_upload = glob.glob(os.path.join(parent_directory, task, models, prompt_config, '*.tar.gz'))
