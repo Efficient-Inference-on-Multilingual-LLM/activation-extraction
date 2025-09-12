@@ -6,6 +6,9 @@ from ..utils.hooked_model import HookedModel
 from ..utils.activation_saver import ActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 def main(args):
     # Load Model
@@ -26,7 +29,7 @@ def main(args):
     for lang in args.languages:
         # Load Dataset
         datasets_per_lang = {}
-        datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test")
+        datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test", cache_dir=os.getenv("HF_CACHE_DIR"))
         if args.sample_size:
             datasets_per_lang[lang] = datasets_per_lang[lang].shuffle(seed=42).select(range(args.sample_size))
 

@@ -1,6 +1,10 @@
 from .activation_saver import ActivationSaver
 from transformers import AutoModelForCausalLM
 import torch
+from dotenv import load_dotenv
+import os
+
+load_dotenv() 
 
 class HookedModel:
     def __init__(self, model_name: str, saver: ActivationSaver):
@@ -17,7 +21,7 @@ class HookedModel:
         
         self.model_name = model_name
         self.saver = saver
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=model_dtype, device_map=device)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=model_dtype, device_map=device, cache_dir=os.getenv("HF_CACHE_DIR"))
         self.model.eval()
         self._setup_hooks()
 
