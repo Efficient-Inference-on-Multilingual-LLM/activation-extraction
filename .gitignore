@@ -209,4 +209,5 @@ __marimo__/
 dev-lf/
 outputs/
 outputs_test/
+outputs_tsne/
 .cache/
