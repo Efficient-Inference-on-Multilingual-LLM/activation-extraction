@@ -1,4 +1,4 @@
-LANGCODE2LANGNAME = {
+LANGNAME2LANGCODE = {
     'Acehnese (Arabic)': 'ace_Arab',
     'Acehnese (Latin)': 'ace_Latn',
     'Mesopotamian Arabic': 'acm_Arab',
@@ -206,4 +206,6 @@ LANGCODE2LANGNAME = {
     'Zulu': 'zul_Latn'
 }
 
-LANGNAME2LANGCODE = {v: k for k, v in LANGCODE2LANGNAME.items()}
+LANGCODE2LANGNAME = {v: k for k, v in LANGNAME2LANGCODE.items()}
+
+EXPERIMENT8_LANGUAGES = ['Chinese (Simplified)', 'Chinese (Traditional)', 'Yue Chinese', 'Acehnese (Arabic)','Acehnese (Latin)','South Levantine Arabic','Amharic','North Levantine Arabic','MSA (Arabic)','MSA (Romanized)','Moroccan Arabic','Egyptian Arabic','Central Aymara','South Azerbaijani','North Azerbaijani','Balinese','Bengali','Banjar (Arabic script)','Banjar (Latin script)','Buginese','Bulgarian','Cebuano','Czech','Welsh','Danish','German','Greek','English','Fijian','French','Irish','Guarani','Gujarati','Hebrew','Hindi','Ilocano','Indonesian','Icelandic','Italian','Japanese','Kannada','Kazakh','Halh Mongolian','Khmer','Kikuyu','Northern Kurdish','Korean','Lao','Lithuanian','Ganda','Standard Latvian','Marathi','Minangkabau (Arabic)','Minangkabau (Latin)','Maori','Dutch','Odia','Southern Pashto','Western Persian','Polish','Portuguese','Ayacucho Quechua','Romanian','Russian','Sicilian','Slovak','Samoan','Spanish','Serbian','Swedish','Swahili','Tamil','Tatar','Telugu','Tagalog','Thai','Turkmen','Turkish','Uyghur','Ukrainian','Urdu','Northern Uzbek','Vietnamese','Waray','Xhosa','Standard Malay','Zulu']
