@@ -30,10 +30,17 @@ class HookedModel:
             for i, layer in enumerate(self.model.transformer.h):
                 layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
         else:
-            self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
-            self.model.model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
-            for i, layer in enumerate(self.model.model.layers):
-                layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
+            multimodal_models = ['gemma-3-4b', 'gemma-3-12b', 'gemma-3-27b']
+            if any(model in self.model_name.lower() for model in multimodal_models):
+                self.model.model.language_model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+                self.model.model.language_model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
+                for i, layer in enumerate(self.model.model.language_model.layers):
+                    layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
+            else:
+                self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+                self.model.model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
+                for i, layer in enumerate(self.model.model.layers):
+                    layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
             
             # TODO: Figure out how to extract components of the model that have been applied with RoPE
             # self.model.model.rotary_emb.register_forward_hook(lambda module, input, output, layer_id="rotary_emb": self.saver.hook_fn(module, input, output, layer_id))
