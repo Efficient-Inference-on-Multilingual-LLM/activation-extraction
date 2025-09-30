@@ -211,3 +211,5 @@ outputs/
 outputs_test/
 outputs_tsne/
 .cache/
+
+venvs/

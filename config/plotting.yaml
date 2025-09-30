@@ -1,0 +1,12 @@
+defaults:
+  - _self_
+  - languages: languages
+  - models: gemma-2-9b # default
+
+activation_path: "/mnt/data/lingua_franca/activation-extraction/outputs/topic_classification"
+save_path: "./results"
+ext: "pdf"
+extraction_mode: "average"
+plot_by: "language"
+device: "cuda:0"
+data: null
