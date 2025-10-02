@@ -84,4 +84,5 @@ echo "-----------------------------------"
 echo "Starting plotting"
 eval $CMD
 echo "Plotting completed"
+echo "-----------------------------------"
 
