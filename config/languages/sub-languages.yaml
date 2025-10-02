@@ -1,0 +1,44 @@
+
+Germanic:
+  - eng_Latn
+  - deu_Latn
+Romance:
+  - spa_Latn
+  - fra_Latn
+Semitic:
+  - arb_Arab
+  - heb_Hebr
+Balto-Slavic:
+  - rus_Cyrl
+  - slk_Latn
+Indo-Iranian:
+  - hin_Deva
+  - urd_Arab
+Lao-Tai:
+  - tha_Thai
+  - lao_Laoo
+Khmeric:
+  - khm_Khmr
+Vietic:
+  - vie_Latn
+Bantu:
+  - swh_Latn
+  - xho_Latn
+  - zul_Latn
+South-Dravidian:
+  - tel_Telu
+  - kan_Knda
+Japanese:
+  - jpn_Jpan
+Korean:
+  - kor_Hang
+Oghuz:
+  - tur_Latn
+  - azb_Arab
+Sinitic:
+  - zho_Hans
+  - zho_Hant
+  - yue_Hant
+Malayo-Polynesian:
+  - ind_Latn
+  - zsm_Latn

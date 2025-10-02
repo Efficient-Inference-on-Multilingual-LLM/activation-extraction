@@ -1,80 +1,28 @@
-Malayo-Polynesian:
-  - tgl_Latn
-  - ceb_Latn
-  - war_Latn
-  - ilo_Latn
-  - ind_Latn
-  - zsm_Latn
-  - min_Arab
-  - min_Latn
-  - bjn_Arab
-  - bjn_Latn
-  - ace_Arab
-  - ace_Latn
-  - ban_Latn
-  - bug_Latn
-  - sun_Latn
-  - jav_Latn
-Bantu:
-  - swh_Latn
-  - xho_Latn
-  - zul_Latn
-  - lug_Latn
-  - kik_Latn
-Semitic:
-  - arb_Arab
-  - arb_Latn
-  - arz_Arab
-  - ary_Arab
-  - ajp_Arab
-  - apc_Arab
-  - heb_Hebr
-  - amh_Ethi
-Indo Iranian:
-  - pes_Arab
-  - pbt_Arab
-  - kmr_Latn
-  - hin_Deva
-  - urd_Arab
-  - ben_Beng
-  - ory_Orya
-  - guj_Gujr
-  - mar_Deva
-Dravidian:
-  - tam_Taml
-  - kan_Knda
-  - tel_Telu
-Germanic:
-  - eng_Latn
-  - nld_Latn
-  - deu_Latn
-  - nob_Latn
-  - dan_Latn
-  - swe_Latn
-Balto-Salvic:
-  - lvs_Latn
-  - lit_Latn
-  - rus_Cyrl
-  - ukr_Cyrl
-  - pol_Latn
-  - slk_Latn
-Romance:
-  - fra_Latn
-  - spa_Latn
-  - por_Latn
-  - ita_Latn
-  - scn_Latn
-  - ron_Latn
-Tibeto-Burman:
-  - mya_Mymr
-Tai:
-  - tha_Thai
-  - lao_Laoo
-Austroasiatic:
-  - khm_Khmr
-  - vie_Latn
-Turkic:
-  - tur_Latn
-  - tuk_Latn
-  - azb_Arab
-  - azj_Latn
+- eng_Latn
+- deu_Latn
+- spa_Latn
+- fra_Latn
+- arb_Arab
+- heb_Hebr
+- rus_Cyrl
+- slk_Latn
+- hin_Deva
+- urd_Arab
+- tha_Thai
+- lao_Laoo
+- khm_Khmr
+- vie_Latn
+- swh_Latn
+- xho_Latn
+- zul_Latn
+- tel_Telu
+- kan_Knda
+- jpn_Jpan
+- kor_Hang
+- tur_Latn
+- azb_Arab
+- zho_Hans
+- zho_Hant
+- yue_Hant
+- ind_Latn
+- zsm_Latn
