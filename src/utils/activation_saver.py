@@ -47,3 +47,11 @@ class ActivationSaver:
             os.makedirs(path, exist_ok=True)
             save_path = os.path.join(path, f"layer_{layer_id}.pt")
             torch.save(output[0].mean(dim=0).detach().cpu(), save_path) 
+
+    # Check if activations for an instance already exist
+    def check_exists(self):
+        path_last_token = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
+        path_average = os.path.join(self.base_save_dir, self.task_id, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "average")
+        check_files = os.listdir(path_last_token) if os.path.exists(path_last_token) else []
+        check_files += os.listdir(path_average) if os.path.exists(path_average) else []
+        return bool(check_files)
