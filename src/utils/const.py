@@ -208,4 +208,105 @@ LANGNAME2LANGCODE = {
 
 LANGCODE2LANGNAME = {v: k for k, v in LANGNAME2LANGCODE.items()}
 
-EXPERIMENT8_LANGUAGES = ['Chinese (Simplified)', 'Chinese (Traditional)', 'Yue Chinese', 'Acehnese (Arabic)','Acehnese (Latin)','South Levantine Arabic','Amharic','North Levantine Arabic','MSA (Arabic)','MSA (Romanized)','Moroccan Arabic','Egyptian Arabic','Central Aymara','South Azerbaijani','North Azerbaijani','Balinese','Bengali','Banjar (Arabic script)','Banjar (Latin script)','Buginese','Bulgarian','Cebuano','Czech','Welsh','Danish','German','Greek','English','Fijian','French','Irish','Guarani','Gujarati','Hebrew','Hindi','Ilocano','Indonesian','Icelandic','Italian','Japanese','Kannada','Kazakh','Halh Mongolian','Khmer','Kikuyu','Northern Kurdish','Korean','Lao','Lithuanian','Ganda','Standard Latvian','Marathi','Minangkabau (Arabic)','Minangkabau (Latin)','Maori','Dutch','Odia','Southern Pashto','Western Persian','Polish','Portuguese','Ayacucho Quechua','Romanian','Russian','Sicilian','Slovak','Samoan','Spanish','Serbian','Swedish','Swahili','Tamil','Tatar','Telugu','Tagalog','Thai','Turkmen','Turkish','Uyghur','Ukrainian','Urdu','Northern Uzbek','Vietnamese','Waray','Xhosa','Standard Malay','Zulu']
+EXPERIMENT8_LANGUAGES = ['West Central Oromo', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Yue Chinese', 'Javanese', 'Sundanese', 'Burmese', 'Acehnese (Arabic)', 'Acehnese (Latin)', 'South Levantine Arabic', 'Amharic', 'North Levantine Arabic', 'MSA (Arabic)', 'MSA (Romanized)', 'Moroccan Arabic', 'Egyptian Arabic', 'Central Aymara', 'South Azerbaijani', 'North Azerbaijani', 'Balinese', 'Bengali', 'Banjar (Arabic script)', 'Banjar (Latin script)', 'Buginese', 'Bulgarian', 'Cebuano', 'Czech', 'Welsh', 'Danish', 'German', 'Greek', 'English', 'Fijian', 'French', 'Irish', 'Guarani', 'Gujarati', 'Hebrew', 'Hindi', 'Ilocano', 'Indonesian', 'Icelandic', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Halh Mongolian', 'Khmer', 'Kikuyu', 'Northern Kurdish', 'Korean', 'Lao', 'Lithuanian', 'Ganda', 'Standard Latvian', 'Marathi', 'Minangkabau (Arabic)', 'Minangkabau (Latin)', 'Maori', 'Dutch', 'Odia', 'Southern Pashto', 'Western Persian', 'Polish', 'Portuguese', 'Ayacucho Quechua', 'Romanian', 'Russian', 'Sicilian', 'Slovak', 'Samoan', 'Spanish', 'Serbian', 'Swedish', 'Swahili', 'Tamil', 'Tatar', 'Telugu', 'Tagalog', 'Thai', 'Turkmen', 'Turkish', 'Uyghur', 'Ukrainian', 'Urdu', 'Northern Uzbek', 'Vietnamese', 'Waray', 'Xhosa', 'Standard Malay', 'Zulu']
+EXPERIMENT8_LANGUAGE_CODES = [LANGNAME2LANGCODE[lang] for lang in EXPERIMENT8_LANGUAGES]
+
+MODEL2NUM_LAYERS = {
+    'gemma-3-1b-it': 26,
+	'gemma-3-4b-it': 34,
+    'gemma-3-270m-it': 18,
+    'gemma-2-9b-it': 42
+}
+
+MODEL2HIDDEN_SIZE = {
+	'gemma-3-1b-it': 1152,
+	'gemma-3-4b-it': 2560,
+	'gemma-3-270m-it': 640,
+    'gemma-2-9b-it': 3584,
+}
+
+EXP2_CONFIG = {
+    'exp_id': 'exp2',
+    'languages': {
+        'Germanic': ["English", "German"],
+        'Romance': ["Spanish", "French"], 
+        'Semitic': ["MSA (Arabic)", "Hebrew"],
+        'Slavic': ["Russian", "Slovak"],
+        'Tai-Kadai': ["Thai", "Lao"],
+        'Khmeric': ["Khmer"],
+        'Vietic': ["Vietnamese"],
+        'Bantu': ["Swahili", "Xhosa", "Zulu"],
+        'Indo-Aryan': ["Urdu", "Hindi", "Kannada", "Telugu"],
+        'Japonic': ["Japanese"],
+        "Koreanic": ["Korean"],
+        'Turkic': ["Turkish", "South Azerbaijani"],
+        'Sinitic': ["Yue Chinese", 'Chinese (Simplified)'],
+        'Malayic': ["Indonesian", "Standard Malay"]
+    }
+}
+
+EXP2_CONFIG = {
+    'exp_id': 'exp2',
+    'languages': {
+        'Germanic': ["English", "German"],
+        'Romance': ["Spanish", "French"], 
+        'Semitic': ["MSA (Arabic)", "Hebrew"],
+        'Slavic': ["Russian", "Slovak"],
+        'Tai-Kadai': ["Thai", "Lao"],
+        'Khmeric': ["Khmer"],
+        'Vietic': ["Vietnamese"],
+        'Bantu': ["Swahili", "Xhosa", "Zulu"],
+        'Indo-Aryan': ["Urdu", "Hindi", "Kannada", "Telugu"],
+        'Japonic': ["Japanese"],
+        "Koreanic": ["Korean"],
+        'Turkic': ["Turkish", "South Azerbaijani", "North Azerbaijani"],
+        'Philippine': ["Tagalog", "Cebuano", 'Ilocano', 'Waray'],
+        'Sinitic': ["Yue Chinese", 'Chinese (Simplified)'],
+        'Malayic': ["Indonesian", "Standard Malay", 
+                    "Minangkabau (Latin)", "Minangkabau (Arabic)", 
+                    "Banjar (Latin script)", "Banjar (Arabic script)"],
+        'Javanesic': ['Javanese'],
+        'Sundanese': ['Sundanese']
+    }
+}
+
+# TODO: Add region information
+EXP3_CONFIG = {
+    'exp_id': 'exp3',
+    'languages': {
+        'West Germanic': ["English", "German", "Dutch"],
+        'North Germanic': ['Swedish', 'Norwegian Bokmål', 'Icelandic'],
+        'Romance': ["Spanish", "French", 'Italian', 'Portuguese', 'Romanian'], 
+        'Semitic': ["MSA (Arabic)", "Hebrew", "Amharic"],
+        'Berber': ['Tamazight', 'Tamasheq (Latin)', 'Tamasheq (Tifinagh)'],
+        'Chadic': ['Hausa'],
+        'Cushitic': ['Somali', 'West Central Oromo'], 
+        'Uralic': ['Finnish', 'Hungarian', 'Estonian'],
+        'East Slavic': ["Russian", "Ukrainian"],
+        'South Slavic': ['Serbian', 'Bulgarian'],
+        'West Slavic': ['Slovak', 'Polish', 'Czech'],
+        'Baltic': ['Lithuanian', 'Standard Latvian'],
+        'Tai-Kadai': ["Thai", "Lao"],
+        'Khmeric': ["Khmer"],
+        'Vietic': ["Vietnamese"],
+        'Niger-Congo non-Bantu': ['Yoruba', 'Igbo'],
+        'Niger-Congo Bantu': ["Swahili", "Xhosa", "Zulu"],
+        'Indo-Aryan': ["Urdu", "Hindi", "Bengali", "Marathi"],
+        'Dravidian': ['Tamil', 'Kannada', 'Telugu'],
+        'Japonic': ["Japanese"],
+        "Koreanic": ["Korean"],
+        'Turkic': ["Turkish", "South Azerbaijani", "North Azerbaijani"],
+        'Iranian': ['Western Persian', 'Northern Kurdish', 'Southern Pashto'],
+        'Philippine': ["Tagalog", "Cebuano", 'Ilocano', 'Waray'],
+        'Sinitic': ["Yue Chinese", 'Chinese (Simplified)'],
+        'Malayic': ["Indonesian", "Standard Malay", 
+                    "Minangkabau (Latin)", "Minangkabau (Arabic)", 
+                    "Banjar (Latin script)", "Banjar (Arabic script)"],
+        'Javanesic': ['Javanese'],
+        'Sundanese': ['Sundanese'],
+        'Quechuan': ['Ayacucho Quechua'],
+        'Tupian': ['Guarani'],
+        'Aymaran': ['Central Aymara'],
+        'Oceanic': ['Fijian', 'Maori', 'Samoan']
+    }
+}
