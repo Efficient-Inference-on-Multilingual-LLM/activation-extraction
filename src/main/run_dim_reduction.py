@@ -6,18 +6,20 @@ import torch
 from sklearn.metrics import silhouette_score
 import numpy as np
 import traceback
-from ..utils.const import LANGCODE2LANGNAME, LANGNAME2LANGCODE, EXPERIMENT8_LANGUAGES
-from datasets import load_dataset
+from ..utils.const import LANGCODE2LANGNAME, LANGNAME2LANGCODE, EXPERIMENT8_LANGUAGES, EXP3_CONFIG
+from datasets import load_dataset, concatenate_datasets
 from dotenv import load_dotenv
 import cupy as cp # Use CuPy for GPU arrays
 
 # Try to import cuML's TSNE, fallback to sklearn's TSNE if not available
 try:
     from cuml.manifold import TSNE as cuTSNE
+    from cuml.manifold import UMAP as cuUMAP
     CUML_AVAILABLE = True
 except ImportError:
     CUML_AVAILABLE = False
 from sklearn.manifold import TSNE as skTSNE
+# from sklearn.manifold import UMAP as skUMAP
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -31,6 +33,7 @@ def extract_tsne_data(
         extraction_mode: Literal["last_token", "average", "first_token"] = "average",
         plot_by: Literal["topic", "language"] = "language",
         device: Literal["cpu", "cuda"] = "cpu",
+        method: Literal["tsne", "umap"] = "tsne",
     ):
     """
     Extract t-SNE latent representations and labels, save to pickle files.
@@ -39,6 +42,13 @@ def extract_tsne_data(
         Dict: Dictionary containing extracted data for each model and layer
     """
     extracted_data = {}
+
+    print("====== CONFIGURATIONS ======")
+    print(f"Input mode: {input_mode}")
+    print(f"Extraction mode: {extraction_mode}")
+    print(f"Plot by: {plot_by}")
+    print(f"Device: {device}")
+    print(f"Method: {method}")
     
     for model in models:
         model_name = model['name']
@@ -88,7 +98,14 @@ def extract_tsne_data(
                         label_language.append(matching_row['category'].values[0])
                     elif plot_by == "language":
                         label_language.append(LANGCODE2LANGNAME[current_language])
-            
+                    elif plot_by == "family":
+                        current_family = 'Unknown'
+                        for family, langs in EXP3_CONFIG['languages'].items():
+                            if LANGCODE2LANGNAME[current_language] in langs:
+                                current_family = family
+                                break
+                        label_language.append(current_family)
+
             # Convert lists to numpy arrays
             latent = np.array(latent)
 
@@ -98,9 +115,21 @@ def extract_tsne_data(
             # Perform t-SNE dimensionality reduction, using cuML if on GPU
             if device == "cuda" and CUML_AVAILABLE:
                 latent = cp.asarray(latent)
-                tsne = cuTSNE(n_components=2, random_state=42)
+                if method == "umap":
+                    # tsne = cuUMAP(n_components=2)
+                    tsne = cuUMAP(n_components=2, random_state=42)
+                elif method == "tsne":
+                    tsne = cuTSNE(n_components=2, random_state=42)
+                else:
+                    raise ValueError(f"Invalid method: {method}. Choose 'tsne' or 'umap'.")
             else:
-                tsne = skTSNE(n_components=2, random_state=42)
+                if method == "umap":
+                    raise ValueError("UMAP with sklearn is not implemented in this code. Please use t-SNE or run on GPU with cuML for UMAP.")
+                    # tsne = skUMAP(n_components=2, random_state=42)
+                elif method == "tsne":
+                    tsne = skTSNE(n_components=2, random_state=42)
+                else:
+                    raise ValueError(f"Invalid method: {method}. Choose 'tsne' or 'umap'.")
 
             try:
                 latent_2d = tsne.fit_transform(latent)
@@ -118,7 +147,7 @@ def extract_tsne_data(
             }
     
         # Save to pickle file
-        pickle_filename = os.path.join(save_path, model_name.split('/')[-1], input_mode, extraction_mode, f"{plot_by}_tsne.pkl")
+        pickle_filename = os.path.join(save_path, model_name.split('/')[-1], input_mode, extraction_mode, f"{plot_by}_{method}.pkl")
         os.makedirs(os.path.dirname(pickle_filename), exist_ok=True)
         with open(pickle_filename, 'wb') as f:
             pickle.dump(extracted_data, f)
@@ -128,24 +157,37 @@ def extract_tsne_data(
     return extracted_data
 
 if __name__ == "__main__":
-    languages = EXPERIMENT8_LANGUAGES
+    languages = []
+    for family, langs in EXP3_CONFIG['languages'].items():
+        languages.extend(langs)
+    languages = [LANGNAME2LANGCODE[lang] for lang in languages]
+    split = 'all'
     data = {}
-    for language in tqdm(languages, desc="Loading SIB-200 Dataset"):
-        data[language] = load_dataset('Davlan/sib200', LANGNAME2LANGCODE[language], split="test", cache_dir=os.getenv("HF_CACHE_DIR"))
+    if split == 'all':
+        for language in tqdm(languages, desc="Loading SIB-200 Dataset"):
+            datasets_per_lang_temp = {}
+            datasets_per_lang_temp[language] = load_dataset('Davlan/sib200', language, cache_dir=os.getenv("HF_CACHE_DIR"))
+            data[language] = {}
+            data[language] = concatenate_datasets([datasets_per_lang_temp[language]['train'], datasets_per_lang_temp[language]['validation'], datasets_per_lang_temp[language]['test']])
+    else:
+        for language in tqdm(languages, desc="Loading SIB-200 Dataset"):
+            data[language] = load_dataset('Davlan/sib200', language, split=split, cache_dir=os.getenv("HF_CACHE_DIR"))
     
-    langcodes = [LANGNAME2LANGCODE[lang] for lang in languages]
+    print(f'Split: {split}')
+    
     _ = extract_tsne_data(
         models=[
             {'name': 'google/gemma-3-4b-it', 'num_layers': 34},
-            {'name': 'google/gemma-3-1b-it', 'num_layers': 26},
-            {'name': 'google/gemma-3-270m-it', 'num_layers': 18},
+            # {'name': 'google/gemma-3-1b-it', 'num_layers': 26},
+            # {'name': 'google/gemma-3-270m-it', 'num_layers': 18},
         ],
-        languages=langcodes,
+        languages=languages,
         data=data,
-        save_path="./outputs_tsne/topic_classification",
+        save_path=f"./outputs_umap{"_testsplit" if split == 'test' else ''}/topic_classification",
         activation_path="./outputs/topic_classification",
         input_mode="raw", # "raw" or "prompted" or "prompt_eng_Latn" or "prompt_ind_Latn"
         extraction_mode="last_token", # "last_token" or "average" or "first_token"
         plot_by="language", # "topic" or "language"
         device="cuda" if torch.cuda.is_available() else "cpu",
+        method="umap"  # "tsne" or "umap"
     )
