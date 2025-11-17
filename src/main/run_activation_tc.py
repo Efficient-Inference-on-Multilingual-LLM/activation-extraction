@@ -1,14 +1,14 @@
 import argparse
 from tqdm import tqdm
-from datasets import load_dataset
-from ..utils.const import LANGCODE2LANGNAME
+from datasets import load_dataset, concatenate_datasets
+from ..utils.const import LANGCODE2LANGNAME, LANGNAME2LANGCODE, EXP3_CONFIG
 from ..utils.hooked_model import HookedModel
 from ..utils.activation_saver import ActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 from dotenv import load_dotenv
 
-load_dotenv() 
+load_dotenv()
 
 def main(args):
     # Load Model
@@ -21,15 +21,32 @@ def main(args):
     else:
         prompt_id_saver = f'prompt_{args.prompt_lang}' 
 
-    saver = ActivationSaver(args.output_dir, task_id='topic_classification', model_name=args.model_name, prompt_id=prompt_id_saver)
+    saver = ActivationSaver(args.output_dir, task_id='topic_classification', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
     hooked_model = HookedModel(args.model_name, saver=saver)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
+    if args.use_predefined_languages:
+        languages_names = []
+        for family, langs in EXP3_CONFIG['languages'].items():
+            languages_names.extend(langs)
+        languages = [LANGNAME2LANGCODE[lang] for lang in languages_names]
+    else:
+        languages = args.languages
+
     # Feed Forward
-    for lang in args.languages:
+    # for lang in args.languages:
+    for lang in languages:
+        
         # Load Dataset
         datasets_per_lang = {}
-        datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split="test", cache_dir=os.getenv("HF_CACHE_DIR"))
+        if args.data_split == 'all':
+            datasets_per_lang_temp = {}
+            datasets_per_lang_temp[lang] = load_dataset("Davlan/sib200", lang, cache_dir=os.getenv("HF_CACHE_DIR"))
+            datasets_per_lang[lang] = concatenate_datasets([datasets_per_lang_temp[lang]['train'], datasets_per_lang_temp[lang]['validation'], datasets_per_lang_temp[lang]['test']])
+        else:
+            datasets_per_lang[lang] = load_dataset("Davlan/sib200", lang, split=args.data_split, cache_dir=os.getenv("HF_CACHE_DIR"))
+        
+        # Sample Dataset
         if args.sample_size:
             datasets_per_lang[lang] = datasets_per_lang[lang].shuffle(seed=42).select(range(args.sample_size))
 
@@ -43,8 +60,14 @@ def main(args):
         
         # Iterate Through Each Instance
         for instance in tqdm(datasets_per_lang[lang], desc=f"Processing activation for topic classification task ({lang})"):
+            # Set ID and Language in Saver
             hooked_model.set_saver_id(str(instance['index_id']))
             hooked_model.set_saver_lang(lang)
+
+            # Check if activations already exist
+            if saver.check_exists():
+                print(f"Activations already exist for ID {instance['index_id']} in language {lang}. Skipping...")
+                continue
 
             # Build Prompt Based on Template
             prompt = prompt_template.replace("{text}", instance['text'])
@@ -82,13 +105,15 @@ def main(args):
 
 if __name__ == "__main__":
 
-	parser = argparse.ArgumentParser(description="Extract activation for topic classification task")
-	parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
-	parser.add_argument("--prompt_lang", type=str, default='all', help="Prompt language. Use 'all' to use prompt that has the same language as the input sentence, use 'no_prompt' to not use any prompt at all.")
-	parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
-	parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
-	parser.add_argument("--sample_size", type=int, default=None, help="Number of samples to use from each language. Use None to use all samples.")
-	parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
+    parser = argparse.ArgumentParser(description="Extract activation for topic classification task")
+    parser.add_argument("--model_name", type=str, required=True, help="Pretrained model name")
+    parser.add_argument("--prompt_lang", type=str, default='all', help="Prompt language. Use 'all' to use prompt that has the same language as the input sentence, use 'no_prompt' to not use any prompt at all.")
+    parser.add_argument("--output_dir", type=str, default="./outputs", help="Output directory")
+    parser.add_argument("--use_predefined_languages", action='store_true', help="Whether to use predefined languages from const file")
+    parser.add_argument('--languages', type=str, nargs='+', default=['fra_Latn', 'eng_Latn', 'ind_Latn'], help='List of languages')
+    parser.add_argument("--sample_size", type=int, default=None, help="Number of samples to use from each language. Use None to use all samples.")
+    parser.add_argument('--is_base_model', action='store_true', help='Whether the model is a base model or a instruct model')
+    parser.add_argument('--data_split', type=str, default='test', help='Dataset split to use (train/validation/test/all)')
 
-	args = parser.parse_args()
-	main(args)
+    args = parser.parse_args()
+    main(args)
