@@ -203,7 +203,14 @@ LANGNAME2LANGCODE = {
     'Chinese (Simplified)': 'zho_Hans',
     'Chinese (Traditional)': 'zho_Hant',
     'Standard Malay': 'zsm_Latn',
-    'Zulu': 'zul_Latn'
+    'Zulu': 'zul_Latn',
+    'Filipino': 'fil_Latn',
+    'Standard Moroccan Tamazight': 'zgh_Tfng',
+    'Mandarin Chinese (Standard Beijing)': 'cmn_Hans',
+    'Mandarin Chinese (Taiwanese)': 'cmn_Hant',
+    'Wu Chinese': 'wuu_Hans',
+    'Paraguayan Guaraní': 'gug_Latn',
+    'Northern Estonian': 'ekk_Latn'
 }
 
 LANGCODE2LANGNAME = {v: k for k, v in LANGNAME2LANGCODE.items()}
@@ -310,3 +317,46 @@ EXP3_CONFIG = {
         'Oceanic': ['Fijian', 'Maori', 'Samoan']
     }
 }
+
+EXP4_CONFIG = {
+    'exp_id': 'exp4',
+    'languages': {
+        'West Germanic': ["English", "German", "Dutch"],
+        'North Germanic': ['Swedish', 'Norwegian Bokmål', 'Icelandic'],
+        'Romance': ["Spanish", "French", 'Italian', 'Portuguese', 'Romanian'], 
+        'Semitic': ["MSA (Arabic)", "Hebrew", "Amharic"],
+        'Berber': ['Standard Moroccan Tamazight', 'Tamasheq (Latin)', 'Tamasheq (Tifinagh)'],
+        'Chadic': ['Hausa'],
+        'Cushitic': ['Somali', 'West Central Oromo'], 
+        'Uralic': ['Finnish', 'Hungarian', 'Northern Estonian'],
+        'East Slavic': ["Russian", "Ukrainian"],
+        'South Slavic': ['Serbian', 'Bulgarian'],
+        'West Slavic': ['Slovak', 'Polish', 'Czech'],
+        'Baltic': ['Lithuanian', 'Standard Latvian'],
+        'Tai-Kadai': ["Thai", "Lao"],
+        'Khmeric': ["Khmer"],
+        'Vietic': ["Vietnamese"],
+        'Niger-Congo non-Bantu': ['Yoruba', 'Igbo'],
+        'Niger-Congo Bantu': ["Swahili", "Xhosa", "Zulu"],
+        'Indo-Aryan': ["Urdu", "Hindi", "Bengali", "Marathi"],
+        'Dravidian': ['Tamil', 'Kannada', 'Telugu'],
+        'Japonic': ["Japanese"],
+        "Koreanic": ["Korean"],
+        'Turkic': ["Turkish", "South Azerbaijani", "North Azerbaijani"],
+        'Iranian': ['Western Persian', 'Northern Kurdish', 'Southern Pashto'],
+        'Philippine': ["Filipino", "Cebuano", 'Ilocano', 'Waray'],
+        'Sinitic': ["Mandarin Chinese (Standard Beijing)", 'Yue Chinese', 'Mandarin Chinese (Taiwanese)', 'Wu Chinese'],
+        'Malayic': ["Indonesian", "Standard Malay", 
+                    "Minangkabau (Latin)", "Minangkabau (Arabic)", 
+                    "Banjar (Latin script)", "Banjar (Arabic script)"],
+        'Javanesic': ['Javanese'],
+        'Sundanese': ['Sundanese'],
+        'Quechuan': ['Ayacucho Quechua'],
+        'Tupian': ['Paraguayan Guaraní'],
+        'Aymaran': ['Central Aymara'],
+        'Oceanic': ['Fijian', 'Maori', 'Samoan'],
+        'Armenian': ['Armenian'],
+    }
+}
+# Change json structure to 'languages' -> 'language_name' -> {'language_code', 'family', 'syntax', 'script', 'region'}
+# Change to FLORES+, add Wu Chinese

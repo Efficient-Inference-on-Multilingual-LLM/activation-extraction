@@ -32,11 +32,33 @@ class HookedModel:
 				layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
 		else:
 			multimodal_models = ['gemma-3-4b', 'gemma-3-12b', 'gemma-3-27b']
-			if any(model in self.model_name.lower() for model in multimodal_models):
+			if any(model in self.model_name.lower() for model in multimodal_models): # gemma-3 models
+
+				# Embedding and final layer norm layers
 				self.model.model.language_model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
 				self.model.model.language_model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
+
+				# Decoder layers
 				for i, layer in enumerate(self.model.model.language_model.layers):
+
+					# Final output of decoder layer hook
 					layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
+
+					# Post-attention layer norm pre-hook (residual post attention)
+					layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"postattn-norm_{i}": self.saver.pre_hook_fn(module, input, layer_id))
+
+			elif 'pythia' in self.model_name.lower():
+
+				# Embedding layer
+				self.model.gpt_neox.embed_in.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+
+				# Decoder layers
+				for i, layer in enumerate(self.model.gpt_neox.layers):
+
+					# Final output of decoder layer hook
+					layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
+
+					# Post-attention layer norm pre-hook (residual post attention)
 					layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"postattn-norm_{i}": self.saver.pre_hook_fn(module, input, layer_id))
 			else:
 				self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
