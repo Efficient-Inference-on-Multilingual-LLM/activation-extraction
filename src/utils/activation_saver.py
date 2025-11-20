@@ -126,12 +126,12 @@ class CohereDecoderActivationSaver(BaseActivationSaver):
 			print(f"Warning: Missing stored tensors for layer {layer_id}")
 			raise ValueError("Stored tensors are None")
 		
-		output = output[0] if isinstance(output, tuple) else output
-		residual_post_mlp = self.initial_residual + self.attn_output + output
+		residual_post_mlp = output[0] if isinstance(output, tuple) else output
+		residual_post_attn = self.initial_residual + self.attn_output
 
 		try:
-			self._save_activation_last_token(tensor=self.attn_output, layer_id=layer_id.replace('residual-postmlp', 'residual-postattn'))
-			self._save_activation_average(tensor=self.attn_output, layer_id=layer_id.replace('residual-postmlp', 'residual-postattn'))
+			self._save_activation_last_token(tensor=residual_post_attn, layer_id=layer_id.replace('residual-postmlp', 'residual-postattn'))
+			self._save_activation_average(tensor=residual_post_attn, layer_id=layer_id.replace('residual-postmlp', 'residual-postattn'))
 		except Exception as e:
 			print(f"Error in hook_fn_final_output for layer {layer_id.replace('residual-postmlp', 'residual-postattn')}: {e}")
 		
