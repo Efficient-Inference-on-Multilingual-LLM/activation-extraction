@@ -1,4 +1,4 @@
-from .activation_saver import ActivationSaver
+from .activation_saver import BaseActivationSaver, CohereDecoderActivationSaver
 from transformers import AutoModelForCausalLM
 import torch
 from dotenv import load_dotenv
@@ -6,9 +6,11 @@ import os
 
 load_dotenv() 
 
-class HookedModel:
-	def __init__(self, model_name: str, saver: ActivationSaver):
-
+class BaseHookedModel:
+	"""
+	Base class for hooking into different models.
+	"""
+	def __init__(self, model_name: str, saver: BaseActivationSaver):
 		device = "cpu"
 		model_dtype = torch.float16
 		if torch.cuda.is_available():
@@ -23,54 +25,10 @@ class HookedModel:
 		self.saver = saver
 		self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=model_dtype, device_map=device, cache_dir=os.getenv("HF_CACHE_DIR"))
 		self.model.eval()
-		self._setup_hooks()
-
-    # TODO: Check compatibility for non-gemma3 models
+	
 	def _setup_hooks(self):
-		if 'bloom' in self.model_name:
-			for i, layer in enumerate(self.model.transformer.h):
-				layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
-		else:
-			multimodal_models = ['gemma-3-4b', 'gemma-3-12b', 'gemma-3-27b']
-			if any(model in self.model_name.lower() for model in multimodal_models): # gemma-3 models
-
-				# Embedding and final layer norm layers
-				self.model.model.language_model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
-				self.model.model.language_model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
-
-				# Decoder layers
-				for i, layer in enumerate(self.model.model.language_model.layers):
-
-					# Final output of decoder layer hook
-					layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
-
-					# Post-attention layer norm pre-hook (residual post attention)
-					layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"postattn-norm_{i}": self.saver.pre_hook_fn(module, input, layer_id))
-
-			elif 'pythia' in self.model_name.lower():
-
-				# Embedding layer
-				self.model.gpt_neox.embed_in.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
-
-				# Decoder layers
-				for i, layer in enumerate(self.model.gpt_neox.layers):
-
-					# Final output of decoder layer hook
-					layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
-
-					# Post-attention layer norm pre-hook (residual post attention)
-					layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"postattn-norm_{i}": self.saver.pre_hook_fn(module, input, layer_id))
-			else:
-				self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
-				self.model.model.norm.register_forward_hook(lambda module, input, output, layer_id="norm": self.saver.hook_fn(module, input, output, layer_id))
-				for i, layer in enumerate(self.model.model.layers):
-					layer.register_forward_hook(lambda module, input, output, layer_id=i: self.saver.hook_fn(module, input, output, layer_id))
-					layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"postattn-norm_{i}": self.saver.pre_hook_fn(module, input, layer_id))
-
-			# TODO: Figure out how to extract components of the model that have been applied with RoPE
-			# self.model.model.rotary_emb.register_forward_hook(lambda module, input, output, layer_id="rotary_emb": self.saver.hook_fn(module, input, output, layer_id))
-		
-
+		raise NotImplementedError("This method should be overridden by subclasses.")
+	
 	def set_saver_id(self, new_id: int):
 		self.saver.set_id(new_id)
 
@@ -96,5 +54,95 @@ class HookedModel:
 			for i, layer in enumerate(self.model.model.layers):
 				layer._forward_hooks.clear()
 				layer._forward_pre_hooks.clear()
+	
+class Gemma3MultimodalHookedModel(BaseHookedModel): # For gemma-3 >=4b
+	def __init__(self, model_name: str, saver: BaseActivationSaver):
+		super().__init__(model_name, saver)
+		self._setup_hooks()
 
-			# self.model.model.rotary_emb._forward_hooks.clear()
+	def _setup_hooks(self):
+		self.model.model.language_model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+
+		# Decoder layers
+		for i, layer in enumerate(self.model.model.language_model.layers):
+
+			# Final output of decoder layer hook
+			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))
+
+			# Post-attention layer norm pre-hook (residual post attention)
+			layer.pre_feedforward_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
+
+class PythiaHookedModel(BaseHookedModel): # For pythia models
+	def __init__(self, model_name: str, saver: BaseActivationSaver):
+		super().__init__(model_name, saver)
+		self._setup_hooks()
+
+	def _setup_hooks(self):
+		# Embedding layer
+		self.model.gpt_neox.embed_in.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+
+		# Decoder layers
+		for i, layer in enumerate(self.model.gpt_neox.layers):
+
+			# Final output of decoder layer hook
+			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))
+
+			# Post-attention layer norm pre-hook (residual post attention)
+			layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
+
+class CohereDecoderHookedModel(BaseHookedModel): # For cohere decoder models
+	def __init__(self, model_name: str, saver: CohereDecoderActivationSaver):
+		super().__init__(model_name, saver)
+		self._setup_hooks()
+
+	def _setup_hooks(self):
+		# Embedding layer
+		self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn_embed_tokens(module, input, output, layer_id))
+
+		# Decoder layers
+		for i, layer in enumerate(self.model.model.layers):
+
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn_set_initial_residual(module, input, output, layer_id))
+
+			# Post-attention layer norm pre-hook (residual post attention)
+			layer.self_attn.register_forward_hook(lambda module, input, output, layer_id=f"residual-postattn_{i}": self.saver.hook_fn_set_attn_output(module, input, output, layer_id))
+			
+			# Final output of decoder layer hook
+			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn_final_output(module, input, output, layer_id))
+
+class Qwen3HookedModel(BaseHookedModel): # For Qwen models
+	def __init__(self, model_name: str, saver: BaseActivationSaver):
+		super().__init__(model_name, saver)
+		self._setup_hooks()
+
+	def _setup_hooks(self):
+		# Embedding layer
+		self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+
+		# Decoder layers
+		for i, layer in enumerate(self.model.model.layers):
+
+			# Post-attention layer norm pre-hook (residual post attention)
+			layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
+			
+			# Final output of decoder layer hook
+			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))
+
+class LlamaHookedModel(BaseHookedModel): # For Llama 3 models
+	def __init__(self, model_name: str, saver: BaseActivationSaver):
+		super().__init__(model_name, saver)
+		self._setup_hooks()
+
+	def _setup_hooks(self):
+		# Embedding layer
+		self.model.model.embed_tokens.register_forward_hook(lambda module, input, output, layer_id="embed_tokens": self.saver.hook_fn(module, input, output, layer_id))
+
+		# Decoder layers
+		for i, layer in enumerate(self.model.model.layers):
+
+			# Post-attention layer norm pre-hook (residual post attention)
+			layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
+			
+			# Final output of decoder layer hook
+			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))

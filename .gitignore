@@ -213,3 +213,6 @@ outputs_tsne/
 .cache/
 
 venvs/
+.venv/
+outputs*
+output*

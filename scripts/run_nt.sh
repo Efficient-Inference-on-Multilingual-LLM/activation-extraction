@@ -11,15 +11,16 @@ model_names=(
     # "GoToCompany/llama3-8b-cpt-sahabatai-v1-base"
     # "Qwen/Qwen2.5-7B"
     # "sail/Sailor2-8B"
-    "Qwen/Qwen3-8B"
-    "CohereLabs/aya-expanse-8b"
-    "meta-llama/Llama-3.1-8B-Instruct"
-#    "sail/Sailor2-8B-Chat"
-    # "google/gemma-3-12b-it"
+    # "sail/Sailor2-8B-Chat"
     # "google/gemma-2-9b-it"
-    # "google/gemma-3-4b-it"
     # "google/gemma-3-1b-it"
     # "google/gemma-3-270m-it"
+    "Qwen/Qwen3-14B"
+    "google/gemma-3-12b-it"
+    # "Qwen/Qwen3-8B"
+    # "meta-llama/Llama-3.1-8B-Instruct"
+    # "CohereLabs/aya-expanse-8b"
+    # "google/gemma-3-4b-it"
     # "EleutherAI/pythia-6.9b-deduped"
 )
 
@@ -35,8 +36,8 @@ for model_name in "${model_names[@]}"; do
         --output_dir "./outputs_flores_plus" \
         --use_predefined_languages \
         --data_split "dev" \
-        --is_base_model
-	    # --sample_size 200 \
+	    --sample_size 200 \
+        # --is_base_model \
     echo "--------------------------------------------------------"
 #    rm -rf ~/.cache/huggingface/hub/*
 done
