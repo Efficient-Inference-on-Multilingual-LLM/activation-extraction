@@ -222,7 +222,13 @@ MODEL2NUM_LAYERS = {
     'gemma-3-1b-it': 26,
 	'gemma-3-4b-it': 34,
     'gemma-3-270m-it': 18,
-    'gemma-2-9b-it': 42
+    'gemma-2-9b-it': 42,
+    'gemma-3-12b-it': 48,
+    'aya-expanse-8b': 32,
+    'Llama-3.1-8B-Instruct': 32,
+    'pythia-6.9b-deduped': 32,
+    'Qwen3-14B': 40,
+    'Qwen3-8B': 36,
 }
 
 MODEL2HIDDEN_SIZE = {
@@ -230,6 +236,12 @@ MODEL2HIDDEN_SIZE = {
 	'gemma-3-4b-it': 2560,
 	'gemma-3-270m-it': 640,
     'gemma-2-9b-it': 3584,
+    'gemma-3-12b-it': 3840,
+    'aya-expanse-8b': 4096,
+    'Llama-3.1-8B-Instruct': 4096,
+    'pythia-6.9b-deduped': 4096,
+    'Qwen3-14B': 5120,
+    'Qwen3-8B': 4096,
 }
 
 EXP2_CONFIG = {
