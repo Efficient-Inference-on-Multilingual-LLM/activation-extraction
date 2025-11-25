@@ -229,6 +229,7 @@ MODEL2NUM_LAYERS = {
     'pythia-6.9b-deduped': 32,
     'Qwen3-14B': 40,
     'Qwen3-8B': 36,
+    'aya-101': 24
 }
 
 MODEL2HIDDEN_SIZE = {
@@ -242,7 +243,23 @@ MODEL2HIDDEN_SIZE = {
     'pythia-6.9b-deduped': 4096,
     'Qwen3-14B': 5120,
     'Qwen3-8B': 4096,
+    'aya-101': 4096
 }
+
+MODEL2HF_NAME = {
+    'gemma-3-1b-it': 'google',
+    'gemma-3-4b-it': 'google',
+    'gemma-3-270m-it': 'google',
+    'gemma-2-9b-it': 'google',
+    'gemma-3-12b-it': 'google',
+    'aya-expanse-8b': 'CohereLabs',
+    'Llama-3.1-8B-Instruct': 'meta-llama',
+    'pythia-6.9b-deduped': 'EleutherAI',
+    'Qwen3-14B': 'Qwen',
+    'Qwen3-8B': 'Qwen',
+    'aya-101': 'CohereLabs'
+}
+HF_NAME2MODEL = {v: k for k, v in MODEL2HF_NAME.items()}
 
 EXP2_CONFIG = {
     'exp_id': 'exp2',
