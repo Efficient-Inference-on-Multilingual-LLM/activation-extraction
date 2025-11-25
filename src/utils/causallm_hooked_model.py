@@ -54,6 +54,7 @@ class BaseHookedModel:
 			for i, layer in enumerate(self.model.model.layers):
 				layer._forward_hooks.clear()
 				layer._forward_pre_hooks.clear()
+				
 	
 class Gemma3MultimodalHookedModel(BaseHookedModel): # For gemma-3 >=4b
 	def __init__(self, model_name: str, saver: BaseActivationSaver):

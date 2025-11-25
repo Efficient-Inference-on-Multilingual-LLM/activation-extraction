@@ -2,7 +2,8 @@ import argparse
 from tqdm import tqdm
 from datasets import load_dataset, concatenate_datasets
 from ..utils.const import LANGCODE2LANGNAME, LANGNAME2LANGCODE, EXP4_CONFIG
-from ..utils.hooked_model import Gemma3MultimodalHookedModel, CohereDecoderHookedModel, PythiaHookedModel, Qwen3HookedModel, LlamaHookedModel
+from ..utils.causallm_hooked_model import Gemma3MultimodalHookedModel, CohereDecoderHookedModel, PythiaHookedModel, Qwen3HookedModel, LlamaHookedModel
+from ..utils.seq2seq_hooked_model import T5HookedModel
 from ..utils.activation_saver import CohereDecoderActivationSaver, GeneralActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
@@ -21,13 +22,14 @@ def main(args):
     else:
         prompt_id_saver = f'prompt_{args.prompt_lang}' 
 
-    if 'cohere' in args.model_name.lower():
+    if 'aya-expanse' in args.model_name.lower() or 'aya-23' in args.model_name.lower():
         saver = CohereDecoderActivationSaver(args.output_dir, task_id='next_token', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
     else:
         saver = GeneralActivationSaver(args.output_dir, task_id='next_token', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
+
     if 'gemma-3' in args.model_name.lower():
         hooked_model = Gemma3MultimodalHookedModel(args.model_name, saver=saver)
-    elif 'cohere' in args.model_name.lower():
+    elif 'aya-expanse' in args.model_name.lower() or 'aya-23' in args.model_name.lower():
         hooked_model = CohereDecoderHookedModel(args.model_name, saver=saver)
     elif 'pythia' in args.model_name.lower():
         hooked_model = PythiaHookedModel(args.model_name, saver=saver)
@@ -35,6 +37,8 @@ def main(args):
         hooked_model = Qwen3HookedModel(args.model_name, saver=saver)
     elif 'meta-llama' in args.model_name.lower():
         hooked_model = LlamaHookedModel(args.model_name, saver=saver)
+    elif 'aya-101' in args.model_name.lower():
+        hooked_model = T5HookedModel(args.model_name, saver=saver)
     else:
         raise ValueError(f"Model {args.model_name} not supported in this script.")
 
