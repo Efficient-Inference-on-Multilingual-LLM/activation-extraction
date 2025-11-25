@@ -214,5 +214,5 @@ outputs_tsne/
 
 venvs/
 .venv/
-outputs*
-output*
+output_temp
+outputs_flores_plus
