@@ -103,9 +103,10 @@ if __name__ == "__main__":
         # 'Llama-3.1-8B-Instruct',
         # 'aya-expanse-8b',
         # 'Qwen3-8B',
-        'Qwen3-14B',
-        'gemma-3-12b-it',
-        'pythia-6.9b-deduped',
+        # 'Qwen3-14B',
+        # 'gemma-3-12b-it',
+        # 'pythia-6.9b-deduped',
+        'aya-101'
     ]
     for model_name in tqdm(model_names, desc="Calculating silhouette scores for models"):
         calculate_silhouette_score(
@@ -116,7 +117,7 @@ if __name__ == "__main__":
             model_name=model_name,
             extraction_mode='raw',
             token_position='last_token',
-            residual_locations=['residual-postattn', 'residual-postmlp'],
+            residual_locations=['residual-postmlp', 'residual-postcrossattn', 'residual-postselfattn'],
             languages=languages
         )
     
