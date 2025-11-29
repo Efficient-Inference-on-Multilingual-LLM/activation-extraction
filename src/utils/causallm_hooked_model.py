@@ -73,6 +73,9 @@ class Gemma3MultimodalHookedModel(BaseHookedModel): # For gemma-3 >=4b
 			# Post-attention layer norm pre-hook (residual post attention)
 			layer.pre_feedforward_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
 
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn(module, input, output, layer_id))
+
 class PythiaHookedModel(BaseHookedModel): # For pythia models
 	def __init__(self, model_name: str, saver: BaseActivationSaver):
 		super().__init__(model_name, saver)
@@ -91,6 +94,9 @@ class PythiaHookedModel(BaseHookedModel): # For pythia models
 			# Post-attention layer norm pre-hook (residual post attention)
 			layer.post_attention_layernorm.register_forward_pre_hook(lambda module, input, layer_id=f"residual-postattn_{i}": self.saver.pre_hook_fn(module, input, layer_id))
 
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn(module, input, output, layer_id))
+
 class CohereDecoderHookedModel(BaseHookedModel): # For cohere decoder models
 	def __init__(self, model_name: str, saver: CohereDecoderActivationSaver):
 		super().__init__(model_name, saver)
@@ -103,14 +109,17 @@ class CohereDecoderHookedModel(BaseHookedModel): # For cohere decoder models
 		# Decoder layers
 		for i, layer in enumerate(self.model.model.layers):
 
-			# Pre-attention layer norm hook (residual pre attention)
-			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn_set_initial_residual(module, input, output, layer_id))
+			# Init residual hook
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-init_{i}": self.saver.hook_fn_set_initial_residual(module, input, output, layer_id))
 
 			# Post-attention layer norm pre-hook (residual post attention)
 			layer.self_attn.register_forward_hook(lambda module, input, output, layer_id=f"residual-postattn_{i}": self.saver.hook_fn_set_attn_output(module, input, output, layer_id))
 			
 			# Final output of decoder layer hook
 			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn_final_output(module, input, output, layer_id))
+
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn_input_layernorm(module, input, output, layer_id))
 
 class Qwen3HookedModel(BaseHookedModel): # For Qwen models
 	def __init__(self, model_name: str, saver: BaseActivationSaver):
@@ -130,6 +139,9 @@ class Qwen3HookedModel(BaseHookedModel): # For Qwen models
 			# Final output of decoder layer hook
 			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))
 
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn(module, input, output, layer_id))
+
 class LlamaHookedModel(BaseHookedModel): # For Llama 3 models
 	def __init__(self, model_name: str, saver: BaseActivationSaver):
 		super().__init__(model_name, saver)
@@ -147,3 +159,6 @@ class LlamaHookedModel(BaseHookedModel): # For Llama 3 models
 			
 			# Final output of decoder layer hook
 			layer.register_forward_hook(lambda module, input, output, layer_id=f'residual-postmlp_{i}': self.saver.hook_fn(module, input, output, layer_id))
+
+			# Pre-attention layer norm hook (residual pre attention)
+			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn(module, input, output, layer_id))

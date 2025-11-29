@@ -32,12 +32,22 @@ class BaseActivationSaver:
 		path_average = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "average")
 		check_files = os.listdir(path_last_token) if os.path.exists(path_last_token) else []
 
-		# # Check if each extraction exist
-		# post_attn_files = [f for f in check_files if 'postattn' in f]
-		# post_mlp_files = [f for f in check_files if 'postmlp' in f]
-		# embed_token_file = [f for f in check_files if 'embed_tokens' in f]
-		# if len(post_attn_files) == 0 or len(post_mlp_files) == 0 or len(embed_token_file) == 0:
-		# 	return False
+		# Check if each extraction exist
+		pre_attn_files_sum = 0
+		post_attn_files_sum = 0
+		post_mlp_files_sum = 0
+		embed_token_file_sum = 0
+		for f in check_files:
+			if 'preattn' in f:
+				pre_attn_files_sum += 1
+			elif 'postattn' in f:
+				post_attn_files_sum += 1
+			elif 'postmlp' in f:
+				post_mlp_files_sum += 1
+			elif 'embed_tokens' in f:
+				embed_token_file_sum += 1
+		if pre_attn_files_sum == 0 or post_attn_files_sum == 0 or post_mlp_files_sum == 0 or embed_token_file_sum == 0:
+			return False
 		
 		# Check average directory files
 		check_files_avg = os.listdir(path_average) if os.path.exists(path_average) else []
@@ -144,3 +154,12 @@ class CohereDecoderActivationSaver(BaseActivationSaver):
 		# Reset stored tensors
 		self.initial_residual = None
 		self.attn_output = None
+	
+	def hook_fn_input_layernorm(self, module, input, output, layer_id):
+		if self._check_set_id_lang(layer_id) is False:
+			return
+		try:
+			self._save_activation_last_token(tensor=output[0] if isinstance(output, tuple) else output, layer_id=layer_id) # Unpack tensor from the tuple
+			self._save_activation_average(tensor=output[0] if isinstance(output, tuple) else output, layer_id=layer_id)
+		except Exception as e:
+			print(f"Error in hook_fn for layer {layer_id}: {e}")
