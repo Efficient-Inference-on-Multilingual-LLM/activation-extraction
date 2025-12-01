@@ -1,5 +1,6 @@
 import os
 import torch
+from .const import MODEL2NUM_LAYERS
 
 class BaseActivationSaver:
 	"""
@@ -26,13 +27,20 @@ class BaseActivationSaver:
 	def pre_hook_fn(self, module, input, layer_id):
 		raise NotImplementedError("This method should be overridden by subclasses.")
 
-	# Check if activations for an instance already exist
+	# Check if activations for an instance already exist. TODO: Use AutoConfig to generalize this function for different models used
 	def check_exists(self):
 		path_last_token = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
 		path_average = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "average")
-		check_files = os.listdir(path_last_token) if os.path.exists(path_last_token) else []
+		path_attn = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "attention_weights")
+		
+		# Check if attention weights directory has files
+		check_files_attn = os.listdir(path_attn) if os.path.exists(path_attn) else []
+		if len(check_files_attn) != MODEL2NUM_LAYERS[self.model_name.split('/')[-1]]:
+			print(f"Warning: Incomplete attention weights for ID {self.current_id} in language {self.current_lang}, rerunning extraction.")
+			return False
 
 		# Check if each extraction exist
+		check_files = os.listdir(path_last_token) if os.path.exists(path_last_token) else []
 		pre_attn_files_sum = 0
 		post_attn_files_sum = 0
 		post_mlp_files_sum = 0
@@ -53,7 +61,7 @@ class BaseActivationSaver:
 		check_files_avg = os.listdir(path_average) if os.path.exists(path_average) else []
 
 		# If there are any files, return True
-		return bool(check_files) and bool(check_files_avg)
+		return bool(check_files) and bool(check_files_avg) and bool(check_files_attn)
 
 	def _save_activation_last_token(self, tensor, layer_id):
 		path = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "last_token")
@@ -66,6 +74,12 @@ class BaseActivationSaver:
 		os.makedirs(path, exist_ok=True)
 		save_path = os.path.join(path, f"layer_{layer_id}.pt")
 		torch.save(tensor[0].mean(dim=0).detach().cpu(), save_path)
+	
+	def _save_attention_weights(self, tensor, layer_id):
+		path = os.path.join(self.base_save_dir, self.task_id, self.data_split, self.model_name.split('/')[-1], self.prompt_id, self.current_lang, self.current_id, "attention_weights")
+		os.makedirs(path, exist_ok=True)
+		save_path = os.path.join(path, f"layer_{layer_id}.pt")
+		torch.save(tensor.detach().cpu(), save_path)
 	
 	def _check_set_id_lang(self, layer_id):
 		if self.current_id is None:
@@ -163,3 +177,39 @@ class CohereDecoderActivationSaver(BaseActivationSaver):
 			self._save_activation_average(tensor=output[0] if isinstance(output, tuple) else output, layer_id=layer_id)
 		except Exception as e:
 			print(f"Error in hook_fn for layer {layer_id}: {e}")
+
+class Gemma3MultimodalActivationSaver(BaseActivationSaver): # Handle Gemma3, Qwen, Pythia models (models that activation are returned in form of a tuple)
+
+	def hook_fn(self, module, input, output, layer_id):
+		if self._check_set_id_lang(layer_id) is False:
+			return
+		try:
+			self._save_activation_last_token(tensor=output[0] if isinstance(output, tuple) else output, layer_id=layer_id) # Unpack tensor from the tuple
+			self._save_activation_average(tensor=output[0] if isinstance(output, tuple) else output, layer_id=layer_id)
+		except Exception as e:
+			print(f"Error in hook_fn for layer {layer_id}: {e}")
+	
+	def pre_hook_fn(self, module, input, layer_id):
+		if self._check_set_id_lang(layer_id) is False:
+			return
+
+		try:
+			# Extract residual connection after attention (precisely after post-attention layer norm)
+			self._save_activation_last_token(tensor=input[0] if isinstance(input, tuple) else input, layer_id=layer_id)
+			self._save_activation_average(tensor=input[0] if isinstance(input, tuple) else input, layer_id=layer_id)
+		except Exception as e:
+			print(f"Error in pre_hook_fn for layer {layer_id}: {e}")
+	
+	def hook_fn_attn_weights(self, module, input, output, layer_id):
+		if self._check_set_id_lang(layer_id) is False:
+			return
+		try:
+			attn_weight = output[1] if isinstance(output, tuple) and len(output) > 1 else torch.tensor([])
+			self._save_attention_weights(tensor=attn_weight, layer_id=layer_id) # Unpack attention weights from the tuple if available
+
+			# If tensor is empty, log a warning
+			if attn_weight.numel() == 0:
+				print(f"Warning: No attention weights found in hook_fn_attn_weights for layer {layer_id}")
+
+		except Exception as e:
+			print(f"Error in hook_fn_attn_weights for layer {layer_id}: {e}")

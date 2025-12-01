@@ -1,4 +1,4 @@
-from .activation_saver import BaseActivationSaver, CohereDecoderActivationSaver
+from .activation_saver import BaseActivationSaver, CohereDecoderActivationSaver, Gemma3MultimodalActivationSaver
 from transformers import AutoModelForCausalLM
 import torch
 from dotenv import load_dotenv
@@ -23,7 +23,13 @@ class BaseHookedModel:
 		
 		self.model_name = model_name
 		self.saver = saver
-		self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=model_dtype, device_map=device, cache_dir=os.getenv("HF_CACHE_DIR"))
+		self.model = AutoModelForCausalLM.from_pretrained(
+			model_name,
+			torch_dtype=model_dtype,
+			device_map=device,
+			cache_dir=os.getenv("HF_CACHE_DIR"),
+			attn_implementation="eager" # To ensure attention weights can be obtained, use eager implementation (line by line with pytorch)
+		)
 		self.model.eval()
 	
 	def _setup_hooks(self):
@@ -37,9 +43,10 @@ class BaseHookedModel:
 		
 	def generate(self, inputs):
 		with torch.no_grad():
-			outputs = self.model.generate(
+			outputs = self.model(
 				**inputs,
 				max_new_tokens=1,
+				output_attentions=True,
 			)
 		return outputs
 
@@ -57,7 +64,7 @@ class BaseHookedModel:
 				
 	
 class Gemma3MultimodalHookedModel(BaseHookedModel): # For gemma-3 >=4b
-	def __init__(self, model_name: str, saver: BaseActivationSaver):
+	def __init__(self, model_name: str, saver: Gemma3MultimodalActivationSaver):
 		super().__init__(model_name, saver)
 		self._setup_hooks()
 
@@ -75,6 +82,9 @@ class Gemma3MultimodalHookedModel(BaseHookedModel): # For gemma-3 >=4b
 
 			# Pre-attention layer norm hook (residual pre attention)
 			layer.input_layernorm.register_forward_hook(lambda module, input, output, layer_id=f"residual-preattn_{i}": self.saver.hook_fn(module, input, output, layer_id))
+
+			# Attention weights hook
+			layer.self_attn.register_forward_hook(lambda module, input, output, layer_id=f"attn-weights_{i}": self.saver.hook_fn_attn_weights(module, input, output, layer_id))
 
 class PythiaHookedModel(BaseHookedModel): # For pythia models
 	def __init__(self, model_name: str, saver: BaseActivationSaver):

@@ -4,7 +4,7 @@ from datasets import load_dataset, concatenate_datasets
 from ..utils.const import LANGCODE2LANGNAME, LANGNAME2LANGCODE, EXP4_CONFIG
 from ..utils.causallm_hooked_model import Gemma3MultimodalHookedModel, CohereDecoderHookedModel, PythiaHookedModel, Qwen3HookedModel, LlamaHookedModel
 from ..utils.seq2seq_hooked_model import T5HookedModel
-from ..utils.activation_saver import CohereDecoderActivationSaver, GeneralActivationSaver
+from ..utils.activation_saver import CohereDecoderActivationSaver, GeneralActivationSaver, Gemma3MultimodalActivationSaver
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 from dotenv import load_dotenv
@@ -24,6 +24,8 @@ def main(args):
 
     if 'aya-expanse' in args.model_name.lower() or 'aya-23' in args.model_name.lower():
         saver = CohereDecoderActivationSaver(args.output_dir, task_id='next_token', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
+    elif 'gemma-3' in args.model_name.lower():
+        saver = Gemma3MultimodalActivationSaver(args.output_dir, task_id='next_token', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
     else:
         saver = GeneralActivationSaver(args.output_dir, task_id='next_token', data_split=args.data_split, model_name=args.model_name, prompt_id=prompt_id_saver)
 
